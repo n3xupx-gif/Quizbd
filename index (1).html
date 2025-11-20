@@ -1,0 +1,2410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Cash Quiz BD - Optimized</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        /* ** সমস্ত স্টাইল অপরিবর্তিত রাখা হয়েছে ** */
+        :root {
+            --font-family: 'Poppins', sans-serif;
+            --primary-color: #FF7043; /* Vivid Orange */
+            --secondary-color: #FFA500; /* Bright Orange/Gold */
+            --background-light: #FFFAE9; 
+            --surface-light: #FFFFFF; 
+            --text-primary-light: #333333; 
+            --text-secondary-light: #888888; 
+            --border-light: #FFCC80; 
+            --background-dark: #120A00; /* Very Dark Brown/Black */
+            --surface-dark: #2A1C00; 
+            --text-primary-dark: #FFD700; 
+            --text-secondary-dark: #FFB300; 
+            --border-dark: #FFCC80;
+            --success: #388E3C; 
+            --danger: #D32F2F; 
+            --pending: #FBC02D;
+            --plinko-peg: #FFD700;
+            --plinko-bucket-bg: #4A2E00;
+            --plinko-ball: #FF4500; 
+            --ad-progress-color: #FFD700; 
+            --ad-inner-bg: var(--surface-dark); 
+            --ad-ring-color: var(--secondary-color);
+            --reward-bg-default: #1C1C1C; 
+            --reward-bg-collected: #3A4700; 
+            --reward-bg-next: #4A3000; 
+            --reward-border-default: #333333;
+            --reward-border-next: var(--primary-color);
+            --reward-text-default: #999999;
+            --reward-text-collected: #B8F200; 
+            --quiz-bg: var(--surface-dark);
+            --quiz-border: var(--secondary-color);
+            --quiz-option-bg: var(--surface);
+            --quiz-option-hover: var(--primary-color);
+        }
+        [data-theme="light"] {
+            --background: var(--background-light);
+            --surface: var(--surface-light);
+            --text-primary: var(--text-primary-light);
+            --text-secondary: var(--text-secondary-light);
+            --border: var(--border-light);
+            --ad-background-dark: var(--background-dark); 
+            --reward-bg-default: #EEEEEE; 
+            --reward-bg-collected: #DFFFE0; 
+            --reward-bg-next: #FFF5E0; 
+            --reward-border-default: #CCCCCC;
+            --reward-border-next: var(--primary-color);
+            --reward-text-default: #666666;
+            --reward-text-collected: var(--success);
+            --quiz-bg: var(--surface-light);
+            --quiz-border: var(--primary-color);
+            --quiz-option-bg: #F0F0F0;
+            --quiz-option-hover: var(--primary-color);
+        }
+        [data-theme="dark"] {
+            --background: var(--background-dark);
+            --surface: var(--surface-dark);
+            --text-primary: var(--text-primary-dark);
+            --text-secondary: var(--text-secondary-dark);
+            --border: var(--border-dark);
+            --ad-background-dark: var(--background-dark);
+        }
+
+        /* ** NEW: Binary Code Background (Opacity 35%) ** */
+        #binary-background {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: 1; opacity: 0.35; pointer-events: none;
+        }
+        .binary-column {
+            position: absolute; width: 20px; font-size: 1rem; color: var(--secondary-color); white-space: pre-wrap; word-break: break-all; user-select: none; animation: fall linear infinite;
+        }
+        @keyframes fall { 0% { transform: translateY(-100%); } 100% { transform: translateY(100%); } }
+
+        /* Base Styles */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: var(--font-family); transition: background-color 0.3s, color 0.3s; -webkit-font-smoothing: antialiased; 
+            background-color: var(--background); color: var(--text-primary); overflow-x: hidden;
+        }
+        /* MODIFIED: Increased padding-bottom to account for the fixed claim button */
+        #app { max-width: 500px; margin: 0 auto; padding-bottom: 150px; position: relative; z-index: 10; } 
+        .page { display: none; padding: 15px; }
+        .page.active { display: block; animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* General Card & Button Styles */
+        .card { 
+            padding: 20px; border-radius: 15px; margin-bottom: 15px; border: 1px solid var(--border);
+            background-color: var(--surface); box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+        .action-btn { 
+            padding: 12px 25px; font-size: 1rem; font-weight: 600; color: var(--text-primary-dark); border: none; 
+            border-radius: 10px; cursor: pointer; transition: all 0.3s ease; 
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color)); 
+            box-shadow: 0 4px 10px rgba(255, 112, 67, 0.4); 
+            white-space: nowrap;
+        }
+        .action-btn:disabled { background: #808B96; color: #fff; cursor: not-allowed; box-shadow: none; }
+        .action-btn:active { transform: translateY(2px); box-shadow: 0 2px 5px rgba(255, 112, 67, 0.5); }
+
+        /* Top User Info Bar */
+        .user-info-bar {
+            display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid var(--border);
+            background-color: var(--surface); position: sticky; top: 0; z-index: 900;
+        }
+        .user-info-bar .left { display: flex; align-items: center; }
+        .user-info-bar #user-photo { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; margin-right: 10px; border: 2px solid var(--primary-color); }
+        .user-info-bar #user-name { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); }
+        .user-info-bar .right { 
+            display: flex; align-items: center; font-size: 1.2rem; font-weight: 700;
+            color: var(--primary-color);
+        }
+        /* Coin Icon style update */
+        .user-info-bar .right #coin-icon { width: 25px; height: 25px; margin-right: 5px; object-fit: contain; }
+        
+        /* Live Feed Banner Style (MODIFIED: New Text) */
+        .live-feed-banner {
+            margin: 0 15px 15px 15px; padding: 10px; border-radius: 10px;
+            background: linear-gradient(90deg, rgba(255, 112, 67, 0.2), rgba(255, 165, 0, 0.1));
+            border: 1px solid var(--secondary-color); color: var(--text-primary); font-size: 0.9rem; font-weight: 500;
+            text-align: center; overflow: hidden; white-space: nowrap; display: flex; align-items: center; justify-content: center;
+            min-height: 40px; box-shadow: 0 0 15px rgba(255, 165, 0, 0.2); 
+        }
+        .live-feed-banner i { margin-right: 8px; color: var(--primary-color); font-size: 1.1rem; }
+        .live-feed-banner strong { color: var(--primary-color); font-weight: 700; }
+
+        /* Loading Screen (9-Dot Loader) */
+        #app-loader { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background-color: var(--background); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            transition: background-color 0.3s;
+        }
+        /* MODIFIED: Reused spinner for in-app loading too */
+        .spinner {
+            width: 70px;
+            height: 70px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 5px;
+            transform: rotate(45deg);
+        }
+        
+        .dot {
+            width: 100%;
+            height: 100%;
+            background-color: var(--primary-color); 
+            border-radius: 50%;
+            animation: dot-scale 1.5s infinite ease-in-out;
+        }
+
+        @keyframes dot-scale {
+            0%, 100% { transform: scale(0.6); opacity: 0.6; }
+            50% { transform: scale(1.0); opacity: 1; }
+        }
+
+        .spinner .dot:nth-child(1) { animation-delay: -1.35s; }
+        .spinner .dot:nth-child(2) { animation-delay: -1.2s; }
+        .spinner .dot:nth-child(3) { animation-delay: -1.05s; }
+        .spinner .dot:nth-child(4) { animation-delay: -0.9s; }
+        .spinner .dot:nth-child(5) { animation-delay: -0.75s; }
+        .spinner .dot:nth-child(6) { animation-delay: -0.6s; }
+        .spinner .dot:nth-child(7) { animation-delay: -0.45s; }
+        .spinner .dot:nth-child(8) { animation-delay: -0.3s; }
+        .spinner .dot:nth-child(9) { animation-delay: -0.15s; }
+
+        /* MODIFIED: Initial loading text update */
+        #loading-progress { 
+            margin-top: 20px; font-size: 1.3rem; font-weight: 700; 
+            color: var(--text-primary);
+        }
+
+        /* Popup general */
+        .popup-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; 
+            z-index: 10000; opacity: 0; transition: opacity 0.3s ease;
+        }
+        .popup-overlay.active { opacity: 1; display: flex; }
+        .popup-content { 
+            padding: 30px; border-radius: 20px; text-align: center; max-width: 90%;
+            background-color: var(--surface); box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transform: translateY(20px) scale(0.9); opacity: 0; transition: all 0.3s ease;
+        }
+        .popup-overlay.active .popup-content { transform: translateY(0) scale(1); opacity: 1; }
+        .popup-content h2 { margin-bottom: 15px; color: var(--primary-color); font-size: 1.6rem; } 
+        .popup-content p { margin-bottom: 20px; font-size: 0.95rem; }
+        /* MODIFIED: Popup loader to use the 9-dot spinner HTML */
+        .popup-loader .spinner { 
+             /* Smaller spinner for popup */
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 15px;
+            transform: rotate(45deg);
+            display: grid;
+        }
+        .popup-loader .spinner .dot {
+            animation-duration: 1.2s; /* Slightly faster */
+        }
+        /* End Popup Loader MODIFICATION */
+
+
+        /* Transaction ID field style for pop-up */
+        #redeem-code-container { 
+            display: flex; gap: 10px; margin-top: 15px;
+        }
+        #redeem-code-input {
+            flex-grow: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border);
+            background-color: var(--background); color: var(--text-primary); text-align: center;
+        }
+        #redeem-btn {
+            padding: 10px 15px; font-size: 0.9rem;
+        }
+
+        /* Plinko Game */
+        #plinko-game { text-align: center; margin-bottom: 25px;}
+        #plinko-game h3 { margin-bottom: 15px; font-size: 1.3rem; color: var(--primary-color); }
+        #plinko-board { 
+            width: 100%; max-width: 350px; height: 380px; 
+            background-color: var(--surface-dark); 
+            border: 2px solid var(--border); border-radius: 15px; margin: 0 auto 20px; position: relative;
+            overflow: hidden; padding-top: 20px;
+        }
+        .plinko-peg { 
+            position: absolute; width: 8px; height: 8px; border-radius: 50%; 
+            background-color: var(--plinko-peg); box-shadow: 0 0 5px rgba(255,215,0,0.5); 
+            z-index: 5;
+        }
+        .plinko-bucket { 
+            position: absolute; bottom: 0; height: 50px; 
+            background-color: var(--plinko-bucket-bg); 
+            border-top: 2px solid var(--border-dark);
+            border-left: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: center; align-items: center;
+            font-size: 0.8rem; font-weight: 600; color: var(--text-primary-dark);
+            box-shadow: inset 0 5px 10px rgba(0,0,0,0.2); z-index: 6;
+        }
+        .plinko-bucket:last-child { border-right: 1px solid rgba(255,255,255,0.1); }
+        #plinko-ball { 
+            position: absolute; top: 0; left: 50%; 
+            width: 15px; height: 15px; border-radius: 50%; background-color: var(--plinko-ball);
+            box-shadow: 0 0 8px var(--plinko-ball); display: none; transition: none; z-index: 10;
+        }
+        .plinko-info { display: flex; justify-content: space-around; font-size: 0.95rem; font-weight: 500; margin-bottom: 15px;}
+        .plinko-info span { padding: 5px 10px; border-radius: 8px; background-color: var(--surface); border: 1px solid var(--border); }
+        
+        /* Plinko Ad Watch (Original Styles Re-added) */
+        #plinko-ad-watch {
+            padding: 15px; border-radius: 10px; background-color: var(--surface-dark);
+            border: 1px solid var(--secondary-color); margin-top: 15px; display: flex;
+            align-items: center; justify-content: space-between; gap: 10px;
+        }
+        /* MODIFIED: Replaced <p> with a div for rule display */
+        #ad-rule-display { 
+             font-size: 0.9rem; 
+             color: var(--text-secondary-dark); 
+             flex-grow: 1; 
+             text-align: left;
+        }
+        #plinko-ad-watch strong { color: var(--ad-progress-color); font-size: 1.1rem; }
+        #watch-ad-for-token-btn { font-size: 0.85rem; padding: 8px 15px; }
+        #drop-plinko-btn { margin-top: 10px; width: 100%; }
+
+        /* REMOVED Grand Prize Lottery CSS */
+
+        /* Daily Reward Specific Styles for Grid Layout */
+        #daily-reward-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); 
+            gap: 10px; margin-bottom: 20px;
+        }
+        .reward-card {
+            padding: 10px 5px; border-radius: 10px; text-align: center; border: 2px solid var(--reward-border-default);
+            background-color: var(--reward-bg-default); transition: all 0.3s ease; color: var(--reward-text-default);
+        }
+        .reward-card h4 { font-size: 1rem; margin-bottom: 5px; color: inherit; }
+        .reward-card p { font-size: 0.9rem; font-weight: 600; margin-top: 5px; color: var(--text-primary); }
+        .reward-card .reward-icon { width: 30px; height: 30px; object-fit: contain; margin: 5px auto; display: block; }
+        .reward-card.collected { 
+            background-color: var(--reward-bg-collected); border-color: var(--success); 
+            color: var(--reward-text-collected); opacity: 0.7;
+        }
+        .reward-card.next-collect { 
+            background-color: var(--reward-bg-next); border-color: var(--reward-border-next); 
+            box-shadow: 0 0 15px rgba(255, 112, 67, 0.5); transform: scale(1.05);
+        }
+        /* FIXED: Claim button container style (now fixed at the bottom) */
+        #fixed-claim-btn-container {
+            position: fixed; 
+            bottom: 80px; 
+            left: 0; 
+            right: 0; 
+            max-width: 500px; 
+            margin: 0 auto; 
+            padding: 10px 15px; 
+            z-index: 999; 
+            display: none; 
+            background: var(--surface); 
+            border-top: 1px solid var(--border);
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        #fixed-claim-btn-container .action-btn { width: 100%; }
+
+
+        /* Quizs Page Styles */
+        #quizs-page h3 { margin-bottom: 15px; font-size: 1.3rem; color: var(--primary-color); }
+        /* MODIFIED: Display a notice when no quiz data is present (Hidden for AI generation, but kept for future debugging) */
+        .quiz-notice {
+            padding: 15px;
+            border-radius: 10px;
+            background-color: var(--background);
+            border: 1px solid var(--danger);
+            color: var(--text-primary);
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: none; 
+        }
+
+        #quiz-game-container { display: block; padding: 20px; border-radius: 15px; background-color: var(--surface-dark); }
+        #quiz-game-container h4 { font-size: 1.2rem; color: var(--text-primary-dark); margin-bottom: 20px; min-height: 50px; }
+        .quiz-option-btn {
+            display: block; width: 100%; padding: 15px; margin-bottom: 10px; border: 1px solid var(--border);
+            border-radius: 8px; background-color: var(--quiz-option-bg); color: var(--text-primary);
+            text-align: left; font-size: 1rem; cursor: pointer; transition: all 0.2s ease;
+        }
+        .quiz-option-btn:hover:not(:disabled) { background-color: var(--quiz-option-hover); color: var(--text-primary-dark); }
+        .quiz-option-btn:disabled { cursor: default; }
+        .quiz-option-btn.correct { background-color: var(--success); color: white !important; border-color: var(--success); }
+        .quiz-option-btn.wrong { background-color: var(--danger); color: white !important; border-color: var(--danger); }
+        /* Quiz Actions Container */
+        #quiz-actions {
+            display: flex; justify-content: space-between; margin-top: 20px;
+        }
+        #quiz-actions .action-btn { flex-grow: 1; margin: 0 5px; }
+
+        /* Referral Section */
+        #referral-section h3 { margin-bottom: 15px; font-size: 1.3rem; color: var(--primary-color); }
+        #referral-section .card { padding: 25px; }
+        #referral-link-display {
+            background-color: rgba(255, 165, 0, 0.1); border: 1px dashed var(--secondary-color);
+            padding: 12px; border-radius: 8px; text-align: center;
+            font-size: 0.9rem; font-weight: 500; color: var(--text-primary);
+            margin: 15px 0; word-break: break-all;
+        }
+        #referral-link-display input {
+            background: none; border: none; width: 100%; text-align: center;
+            font-size: 0.9rem; font-weight: 500; color: var(--text-primary); cursor: pointer;
+        }
+        #referral-count-bar { text-align: center; font-size: 1rem; font-weight: 500; margin-top: 15px; color: var(--text-secondary); }
+        #referral-count-bar strong { color: var(--primary-color); font-size: 1.1rem; }
+        
+        /* NEW: Leaderboard Styles */
+        #leaderboard-section { margin-top: 20px; }
+        #leaderboard-section h3 { margin-bottom: 15px; font-size: 1.3rem; color: var(--primary-color); }
+        .leaderboard-list { margin-top: 15px; }
+        .leaderboard-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .leaderboard-item:last-child { border-bottom: none; }
+        .leaderboard-rank { font-weight: 700; color: var(--secondary-color); width: 30px; text-align: center; }
+        .leaderboard-info { display: flex; align-items: center; flex-grow: 1; }
+        .leaderboard-photo { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; margin-right: 10px; border: 2px solid var(--primary-color); }
+        .leaderboard-name { font-weight: 600; font-size: 0.95rem; color: var(--text-primary); }
+        .leaderboard-count { font-weight: 700; color: var(--success); }
+        /* END NEW Leaderboard Styles */
+
+        /* NEW: Wallet Section Styles (MODIFIED: Centering logic) */
+        #wallet-section { 
+            text-align: center; 
+            margin-top: 20px;
+            display: flex; /* Added for centering button below */
+            flex-direction: column;
+            align-items: center;
+        }
+        #wallet-section h3 { margin-bottom: 20px; font-size: 1.3rem; color: var(--primary-color); }
+        #wallet-section .card { padding: 25px; }
+        
+        .connect-btn-ton {
+            padding: 15px 30px; font-size: 1.1rem; border-radius: 12px; 
+            background: linear-gradient(45deg, #0077B6, #00B4D8); /* TON colors */
+            color: white; border: none; font-weight: 700;
+            box-shadow: 0 4px 15px rgba(0, 119, 182, 0.5);
+            transition: all 0.3s ease;
+            /* NEW CENTERING STYLES */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .connect-btn-ton:hover { background: linear-gradient(45deg, #0088CC, #48CAE4); }
+        
+        /* NEW: USDT ICON STYLE (Updated for new image) */
+        #connectBtn #usdt-icon { 
+            width: 30px; /* Slightly larger */
+            height: 30px; 
+            margin-right: 10px; 
+            object-fit: contain;
+        }
+
+        /* REMOVED: Disconnect button styles */
+        .disconnect-btn-ton { display: none !important; }
+
+        /* MODIFIED: Wallet Address Centering/Style */
+        #walletAddress {
+            margin-top: 15px; font-size: 0.9rem; 
+            padding: 10px; border: 1px dashed var(--secondary-color); 
+            border-radius: 8px; background-color: var(--surface);
+            word-break: break-all;
+            max-width: 90%; /* Added max width for centering */
+        }
+        #addressText { color: var(--success); font-weight: 600; }
+        
+        /* NEW: Exchange View Styles (Mimics first image) */
+        .exchange-view {
+             padding: 20px;
+             border-radius: 15px;
+             margin-top: 20px;
+             background-color: var(--surface-dark);
+             border: 1px solid var(--primary-color);
+             text-align: center;
+        }
+        .exchange-display {
+             display: flex;
+             justify-content: center;
+             align-items: center;
+             margin-bottom: 25px;
+             gap: 15px;
+        }
+        .exchange-circle {
+             width: 120px;
+             height: 120px;
+             border-radius: 50%;
+             border: 2px solid var(--secondary-color);
+             display: flex;
+             flex-direction: column;
+             justify-content: center;
+             align-items: center;
+             font-size: 1.1rem;
+             font-weight: 600;
+             background-color: var(--background);
+             box-shadow: 0 0 10px rgba(255, 165, 0, 0.3);
+        }
+        .exchange-circle span {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        .exchange-view i.fa-equals {
+            font-size: 2rem;
+            color: var(--secondary-color);
+        }
+        
+        /* NEW: Withdraw Final View Styles (Mimics second image) */
+        .withdraw-final-view {
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            background-color: var(--surface-dark);
+            border: 1px solid var(--success);
+            text-align: center;
+        }
+        .withdraw-final-view h4 {
+            color: var(--success);
+            margin-bottom: 15px;
+        }
+        .withdraw-final-view p {
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+        .withdrawal-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-direction: column; /* Changed to column for better fit with new UI */
+            align-items: center;
+        }
+        #withdraw-amount-input {
+            width: 80%; /* Adjusted width */
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid var(--border);
+            background-color: var(--background);
+            color: var(--text-primary);
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .withdraw-final-view .min-withdraw-info {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-secondary);
+        }
+        #withdraw-btn {
+            width: 80%;
+            padding: 15px;
+            font-size: 1.1rem;
+            background: linear-gradient(45deg, #0077B6, #00B4D8); /* TON colors */
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 119, 182, 0.5);
+        }
+        /* END NEW Withdrawal Section Styles */
+
+
+        /* Bottom Navigation */
+        .bottom-nav { 
+            position: fixed; bottom: 0; left: 0; right: 0; max-width: 500px; margin: 0 auto; 
+            display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid var(--border); 
+            background-color: var(--surface); z-index: 1000;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.05); transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+        .nav-btn { 
+            background: none; border: none; cursor: pointer; display: flex; flex-direction: column; 
+            align-items: center; font-family: var(--font-family); font-size: 0.75rem; transition: color 0.2s; 
+            flex-grow: 1; padding: 5px 0; color: var(--text-secondary);
+        }
+        .nav-btn i { font-size: 1.5rem; margin-bottom: 4px; } 
+        .nav-btn.active { color: var(--primary-color); font-weight: 600; }
+
+        /* Dark Mode Toggle */
+        #theme-toggle {
+            position: fixed; bottom: 90px; right: 15px; z-index: 1001;
+            background: var(--surface); color: var(--text-primary);
+            border: 1px solid var(--border); border-radius: 50%;
+            width: 45px; height: 45px; display: flex; justify-content: center; align-items: center;
+            font-size: 1.2rem; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: background-color 0.3s, color 0.3s, border-color 0.3s, transform 0.2s;
+        }
+        #theme-toggle:active { transform: scale(0.95); }
+
+        /* Confetti Animation */
+        .confetti {
+            position: fixed; width: 10px; height: 10px; background-color: #f00; top: 0; left: 0; opacity: 0;
+            transform-origin: center; animation: confetti-fall 3s ease-out forwards; z-index: 100000;
+        }
+        @keyframes confetti-fall {
+            0% { transform: translate(var(--x), var(--y)) rotate(0deg); opacity: 1; }
+            100% { transform: translate(var(--x-end), var(--y-end)) rotate(var(--rot-end)deg); opacity: 0; }
+        }
+
+        /* Reward Popup animation */
+        .reward-popup-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;
+            z-index: 10000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s;
+        }
+        .reward-popup-overlay.active { opacity: 1; visibility: visible; }
+        .reward-popup-content {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white; padding: 40px; border-radius: 25px; text-align: center;
+            transform: scale(0.8); opacity: 0; transition: all 0.4s ease-out;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        }
+        .reward-popup-overlay.active .reward-popup-content { transform: scale(1); opacity: 1; }
+        .reward-popup-content h2 { font-size: 2.2rem; margin-bottom: 10px; text-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .reward-popup-content p { font-size: 1.2rem; margin-bottom: 20px; }
+        .reward-popup-content .action-btn { background: #fff; color: var(--primary-color); width: auto; padding: 10px 30px; }
+        .reward-popup-content .action-btn:hover { background: #eee; }
+
+    </style>
+    <!-- NEW: Firebase SDK Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <!-- NEW: TON Connect UI SDK -->
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+</head>
+<body data-theme="dark">
+    <!-- Binary Code Background -->
+    <div id="binary-background"></div>
+
+    <!-- MODIFIED LOADER HTML (9-Dot Loader) -->
+    <div id="app-loader">
+        <div class="spinner">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+        <!-- MODIFIED: Removed percentage from initial load screen -->
+        <p id="loading-progress"></p>
+    </div>
+
+    <!-- General Popup for alerts/loaders -->
+    <div id="general-popup" class="popup-overlay"><div class="popup-content"><div id="popup-body"></div></div></div>
+
+    <!-- Welcome Popup -->
+    <div id="welcome-popup" class="popup-overlay">
+        <div class="popup-content">
+            <h2 id="welcome-title"></h2>
+            <p id="welcome-text"></p>
+            <button class="action-btn popup-close-btn">Start</button>
+        </div>
+    </div>
+
+    <!-- Reward Popup -->
+    <div id="reward-popup-overlay" class="reward-popup-overlay">
+        <div class="reward-popup-content">
+            <h2 id="reward-popup-title">✨ অভিনন্দন! ✨</h2>
+            <p id="reward-popup-message"></p>
+            <button class="action-btn" onclick="closeRewardPopup()">দারুণ!</button>
+        </div>
+    </div>
+
+    <div id="app" style="display: none;">
+        <header class="user-info-bar">
+            <div class="left">
+                <img id="user-photo" src="https://via.placeholder.com/45" alt="User Photo">
+                <span id="user-name">Loading...</span>
+            </div>
+            <div class="right">
+                <img id="coin-icon" src="https://cdn3d.iconscout.com/3d/premium/thumb/bangladeshi-taka-gold-coin-3d-icon-png-download-7281011.png" alt="Coin" /> 
+                <span id="user-balance">0.00</span>
+            </div>
+        </header>
+
+        <main id="main-content">
+            <!-- HOME PAGE: Plinko & Grand Prize Lottery -->
+            <div id="home-page" class="page active">
+                <div id="live-feed-banner" class="live-feed-banner">
+                    <!-- MODIFIED: New Live Feed Text -->
+                    <i class="fas fa-bolt"></i> <span id="live-feed-message">💥🔥Play, earn coins, and win rewards instantly!🔥💥</span>
+                </div>
+                
+                <div id="plinko-game" class="card">
+                    <h3>🎯 Plinko Game</h3>
+                    <div id="plinko-board">
+                        <div id="plinko-ball"></div>
+                    </div>
+                    <div class="plinko-info">
+                        <span>Tokens: <span id="plinko-tokens-display">0</span></span>
+                        <span>Today's Earnings: <span id="plinko-today-earnings">0.00</span> Coins</span>
+                    </div>
+                    <div id="plinko-ad-watch">
+                        <!-- MODIFIED: Display for dynamic ad rules (Simulated) -->
+                        <div id="ad-rule-display">Ad is loading...</div>
+                        <!-- END MODIFIED -->
+                        <button id="watch-ad-for-token-btn" class="action-btn" disabled>Watch Ad</button>
+                    </div>
+                    <button id="drop-plinko-btn" class="action-btn">Drop Token</button>
+                </div>
+
+                <!-- REMOVED: Grand Prize Lottery block -->
+            </div>
+
+            <!-- DAILY REWARD PAGE (MODIFIED: Button position moved) -->
+            <div id="daily-reward-page" class="page">
+                <div class="card">
+                    <h3>🎁 Daily Reward Streak</h3>
+                    <!-- MODIFIED: Added more margin-bottom to account for the fixed button -->
+                    <div id="daily-reward-grid" style="margin-bottom: 100px;"> 
+                        <p>Rewards are loading...</p>
+                    </div>
+                </div>
+                <!-- REMOVED: Collect button container from here -->
+            </div>
+
+            <!-- QUIZS PAGE: MODIFIED TO REMOVE CATEGORY SELECTION -->
+            <div id="quizs-page" class="page">
+                <div class="card">
+                    <h3>🧠 Play Quiz & Earn</h3>
+                    <!-- Quiz Data Empty Notice (Hidden but present for debugging) -->
+                    <div class="quiz-notice">
+                        কুইজের ডেটা লোড হচ্ছে না। অনুগ্রহ করে এডমিন প্যানেল থেকে কুইজের প্রশ্ন যোগ করুন।
+                    </div>
+                    
+                    <!-- MODIFIED: Quiz Game Container is now the primary view -->
+                    <div id="quiz-game-container" class="card" style="display:block; min-height: 250px;">
+                        <h4>Loading Question...</h4>
+                        <div id="quiz-options-container">
+                            <!-- Options will be loaded here -->
+                        </div>
+                        <div id="quiz-actions">
+                            <!-- Next Quiz button is shown after answer -->
+                            <!-- UPDATED: Added (Watch Ad) to be explicit -->
+                            <button id="quiz-next-btn" class="action-btn" style="display:none;">Next Quiz (Watch Ad)</button>
+                            <!-- MODIFIED: Button text changed to "Back to Home" -->
+                            <button id="quiz-back-btn" class="action-btn">Back to Home</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REFERRAL PAGE -->
+            <div id="referral-page" class="page">
+                <div id="referral-section" class="card">
+                    <h3>👥 Referral Program</h3>
+                    <!-- MODIFIED TEXT to reflect new logic -->
+                    <p>Invite your friends! You earn <span style="color:var(--primary-color); font-weight:700;">999 Coins</span> when your friend signs up with your link!</p>
+                    <div id="referral-link-display">
+                        <input type="text" id="referral-link-input" value="Loading..." readonly>
+                        <button id="copy-ref-link-btn" class="action-btn" style="margin-top: 10px; width: 100%;">Copy Link</button>
+                    </div>
+                    <p id="referral-count-bar">You have referred <strong><span id="referral-count-display">0</span></strong> users.</p>
+                </div>
+
+                <!-- NEW: Leaderboard Section -->
+                <div id="leaderboard-section" class="card">
+                    <h3>🏆 Top 10 Referrals Leaderboard</h3>
+                    <div id="leaderboard-list" class="leaderboard-list">
+                        <!-- Leaderboard items will be inserted here by JS -->
+                        <p style="text-align:center; color: var(--text-secondary);">Loading leaderboard...</p>
+                    </div>
+                </div>
+                <!-- END NEW: Leaderboard Section -->
+
+            </div>
+
+            <!-- NEW: WALLET PAGE (Replaces Withdraw Page) -->
+            <div id="wallet-page" class="page">
+                 <div class="card">
+                    <h3>💸 TON Wallet</h3>
+                    
+                    <!-- START NEW: Official Channel and Rules Block -->
+                    <div style="text-align: center; margin-bottom: 25px; padding: 15px; border: 1px dashed var(--secondary-color); border-radius: 10px; background-color: var(--background);">
+                        <p style="color: var(--secondary-color); font-weight: 600; margin-bottom: 10px;"><i class="fas fa-exclamation-triangle"></i> উইথড্রয়ালের জন্য গুরুত্বপূর্ণ নিয়মাবলী:</p>
+                        <p style="margin-bottom: 5px; font-size: 0.9rem;">
+                            <i class="fas fa-check-circle" style="color: var(--success);"></i> আপনাকে আমাদের অফিসিয়াল চ্যানেলে অবশ্যই যোগ দিতে হবে, না হলে আপনি লিস্টিং-এ যুক্ত হবেন না ❗
+                        </p>
+                        <p style="margin-bottom: 10px; font-size: 0.9rem;">
+                            <i class="fas fa-users" style="color: var(--primary-color);"></i> যাদেরকে রেফার করবেন, তারাও অ্যাক্টিভ থাকতে হবে—অ্যাক্টিভ না থাকলে লিস্টিং হবে না 👥
+                        </p>
+                        <p style="margin-bottom: 15px; font-size: 0.9rem; color: var(--danger); font-weight: 600;">
+                            <i class="fas fa-ban"></i> ⚠️ একটি মোবাইল ফোন দিয়ে শুধুমাত্র একটি আইডি খোলা যাবে। এর বেশি আইডি খুললে অ্যাকাউন্ট ব্যান হয়ে যাবে 🚫📵
+                        </p>
+                        
+                        <a href="https://t.me/cashquizbd" target="_blank" class="action-btn" style="width: 90%; padding: 12px; font-size: 1rem; margin-top: 10px;">
+                            🔗 এখনই আমাদের অফিসিয়াল চ্যানেলে যোগ দিন👇
+                            <!-- MODIFIED: Button text should be "জয়ান অফিসিয়াল চ্যানেল" as requested -->
+                            <!-- 🔗 এখনই আমাদের অফিসিয়াল চ্যানেলে যোগ দিন👇 -->
+                        </a>
+                    </div>
+                    <!-- END NEW BLOCK -->
+
+                    <div id="wallet-section" style="text-align:center;">
+                        <p id="wallet-status-msg" style="margin-bottom: 20px; font-size: 0.95rem; color: var(--text-secondary);">
+                            Connect your TON Wallet to enable future coin withdrawals.
+                        </p>
+                        
+                        <!-- MODIFIED: Added NEW USDT Image -->
+                        <button id="connectBtn" class="connect-btn-ton">
+                            <!-- UPDATED IMAGE SRC -->
+                            <img id="usdt-icon" src="https://i.ibb.co.com/k2R105DF/AIRetouch-20251118-063831848.png" alt="USDT Icon" />
+                            Connect Wallet
+                        </button>
+
+                        <div id="walletAddress" style="display:none;">
+                            <b>Wallet:</b> <span id="addressText"></span>
+                        </div>
+                        
+                        <!-- MODIFIED: Exchange View (Always visible if connected) -->
+                        <div id="exchange-view" class="exchange-view" style="display:none;">
+                             <h4 style="color:var(--primary-color); margin-bottom: 20px;">Coin to USDT Exchange</h4>
+                             <div class="exchange-display">
+                                 <div class="exchange-circle">
+                                     <span id="exchange-coin-amount">0.000</span>
+                                     <span>Coins</span>
+                                 </div>
+                                 <i class="fas fa-equals"></i>
+                                 <div class="exchange-circle" style="border-color: var(--success);">
+                                     <span id="exchange-usdt-amount">0.00</span>
+                                     <span>USDT</span>
+                                 </div>
+                             </div>
+                             
+                             <!-- Input for Coin Amount (Mimics the "Enter Coin" block) -->
+                             <input type="number" id="exchange-input" placeholder="Enter Coin" required style="width: 70%; padding: 12px; border-radius: 10px; border: 2px solid var(--border); background-color: var(--background); color: var(--text-primary); text-align: center; font-size: 1.2rem; font-weight: 600; margin-bottom: 20px;">
+                             
+                             <button id="exchange-btn" class="action-btn" style="width: 70%;">Exchange</button>
+                             <p style="font-size: 0.9rem; margin-top: 10px; color: var(--text-secondary);">Min. exchange: 100 Coins</p>
+                        </div>
+                        <!-- END NEW: Exchange View -->
+
+                        <!-- MODIFIED: Withdrawal Final View (Always visible if connected) -->
+                        <div id="withdraw-final-view" class="withdraw-final-view" style="display:none;">
+                            <h4>Withdraw USDT</h4>
+                            <img src="https://i.ibb.co.com/k2R105DF/AIRetouch-20251118-063831848.png" alt="USDT Icon" style="width: 40px; height: 40px; margin-bottom: 15px;" />
+                            
+                            <p id="current-usdt-balance" style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary);">0.00 USDT Available</p>
+                            
+                            <div id="referral-lock-status" style="margin-top: 15px;">
+                                <!-- Lock/Unlock status will be displayed here -->
+                            </div>
+                            
+                            <!-- Withdrawal Form (Hidden if locked) -->
+                            <div id="withdrawal-form-container" style="display:none; margin-top: 20px;">
+                                <div class="withdrawal-input-group">
+                                    <input type="number" id="withdraw-amount-input" placeholder="Enter amount:" required>
+                                    <p class="min-withdraw-info">Minimum withdrawal amount USDT: 10</p> 
+                                    <button id="withdraw-btn" class="action-btn">উইথড্র USDT</button>
+                                </div>
+                            </div>
+                            
+                        </div>
+                        <!-- END MODIFIED: Withdrawal Final View -->
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <nav class="bottom-nav">
+            <button class="nav-btn active" data-page="home-page"><i class="fas fa-home"></i><span>Home</span></button>
+            <button class="nav-btn" data-page="daily-reward-page"><i class="fas fa-gift"></i><span>Reward</span></button>
+            <button class="nav-btn" data-page="quizs-page"><i class="fas fa-question-circle"></i><span>Quiz</span></button>
+            <button class="nav-btn" data-page="referral-page"><i class="fas fa-users"></i><span>Referral</span></button>
+            <!-- UPDATED: Replaced 'Withdraw' with 'Wallet' and icon 'money-bill-wave' with 'wallet' -->
+            <button class="nav-btn" data-page="wallet-page"><i class="fas fa-wallet"></i><span>Wallet</span></button>
+        </nav>
+
+        <button id="theme-toggle"><i class="fas fa-sun"></i></button>
+    </div>
+    
+    <!-- NEW: Fixed Daily Reward Claim Button Container (FIXED POSITION) -->
+    <div id="fixed-claim-btn-container" class="collect-btn-container" style="display: none;">
+        <button id="collect-daily-reward-btn" class="action-btn" disabled>Claim</button>
+    </div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <script>
+    // ** FIX 1: appState, tgUser, currentQuiz এবং stateManager কে Global Scope এ ঘোষণা করা হয়েছে **
+    let appState = {}; 
+    let tgUser = {}; 
+    let currentQuiz = null;
+    let stateManager = {};
+    
+    // Global function for reward popup closure 
+    const closeRewardPopup = () => { 
+        document.getElementById('reward-popup-overlay').classList.remove('active');
+    };
+    
+    // ** FIX 1: General Popup functions moved to GLOBAL scope to resolve "showGeneralPopup is not defined" error in showQuizLoader **
+    const generalPopup = document.getElementById('general-popup');
+    const popupBody = document.getElementById('popup-body');
+    const closeGeneralPopup = () => { generalPopup.classList.remove('active'); };
+    const showGeneralPopup = (content, closeable = true) => { 
+        popupBody.innerHTML = content; 
+        generalPopup.classList.add('active'); 
+        if (closeable) {
+            const closeBtn = generalPopup.querySelector('.popup-close-btn');
+            if (closeBtn) closeBtn.onclick = closeGeneralPopup;
+        } else {
+             // If not closeable, ensure no close button is present or active
+             const closeBtn = generalPopup.querySelector('.popup-close-btn');
+             if (closeBtn) closeBtn.onclick = null;
+        }
+    };
+    // ** END FIX 1 **
+    
+    // NEW: Function to display the 9-dot loader popup (Now correctly calls the global showGeneralPopup)
+    const showQuizLoader = (message) => {
+         const loaderHtml = `
+            <div class="popup-loader">
+                <div class="spinner">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+            </div>
+            <h2>${message}</h2>
+            <p style="margin-bottom: 0;">অনুগ্রহ করে অপেক্ষা করুন...</p>
+        `;
+        showGeneralPopup(loaderHtml, false); // false = not closeable by click
+    }
+
+
+    // ----------------------------------------------------------------------
+    //  *** ADMIN PANEL QUIZ SYSTEM (FIREBASE DIRECT READ) ***
+    // ----------------------------------------------------------------------
+    
+    /**
+     * NEW: Function to fetch a quiz question from the Firebase 'quizzes' node.
+     */
+    const fetchQuizFromFirebase = async (wonQuestions) => {
+        console.log("Calling Firebase DB to get a new quiz question.");
+        
+        try {
+            const quizzesRef = firebase.database().ref('quizzes');
+            const snapshot = await quizzesRef.once('value');
+            const allQuizzesObject = snapshot.val(); 
+
+            if (!allQuizzesObject) {
+                // MODIFIED: Bengali Error
+                throw new Error("ডাটাবেসে কোনো কুইজের প্রশ্ন পাওয়া যায়নি। এডমিন প্যানেল থেকে প্রশ্ন যোগ করুন।");
+            }
+
+            // Convert object to array and filter out questions the user has already won
+            const availableQuizzes = Object.values(allQuizzesObject).filter(quiz => 
+                 quiz.question && !wonQuestions.includes(quiz.question)
+            );
+
+            if (availableQuizzes.length === 0) {
+                console.log("User completed all available quizzes.");
+                return null; // All quizzes completed
+            }
+
+            // Pick a random quiz from the available list
+            const randomIndex = Math.floor(Math.random() * availableQuizzes.length);
+            return availableQuizzes[randomIndex];
+
+        } catch (e) {
+            console.error("Error fetching quiz from Firebase:", e);
+            throw new Error(e.message || "কুইজ লোড করতে ব্যর্থ হয়েছে। (ডাটাবেস সমস্যা)");
+        }
+    };
+    // ----------------------------------------------------------------------
+    //  *** END ADMIN PANEL QUIZ SYSTEM ***
+    // ----------------------------------------------------------------------
+
+    // NEW: Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCL1Oo3oDMsXv9J2fj1VUJLVTzf-nS7Tzw",
+      authDomain: "cash-quiz-aa0c0.firebaseapp.com",
+      databaseURL: "https://cash-quiz-aa0c0-default-rtdb.firebaseio.com",
+      projectId: "cash-quiz-aa0c0",
+      storageBucket: "cash-quiz-aa0c0.firebasestorage.app",
+      messagingSenderId: "626972745202",
+      appId: "1:626972745202:web:01d57ccedc6d74e98f9f6b"
+    };
+
+    // NEW: Function to load the Ad Network SDK dynamically
+    const loadAdSdk = (scriptUrl, zoneId) => {
+        if (!scriptUrl || !zoneId) { 
+            console.warn("Ad Network config missing. Cannot load SDK."); 
+            return; 
+        }
+        // Avoid loading twice if using the same zone id/script url
+        if (document.querySelector(`script[src='${scriptUrl}']`)) return; 
+        
+        const script = document.createElement('script');
+        script.src = scriptUrl;
+        script.setAttribute('data-zone', zoneId);
+        // This attribute is critical for the ad network to define its global function
+        script.setAttribute('data-sdk', `show_${zoneId}`); 
+        script.async = true;
+        document.body.appendChild(script);
+        console.log(`Ad SDK loaded: ${scriptUrl}`);
+    };
+    
+    // NEW: TON Connect UI Global Variable
+    let tonConnectUI = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        
+        if (!window.Telegram || !window.Telegram.WebApp) {
+            console.error("Telegram WebApp object not found. Running in fallback mode.");
+        }
+        const tg = window.Telegram.WebApp;
+        
+        // ** UPDATED CONSTANTS (MODIFIED BY USER REQUEST) **
+        const PLINKO_DAILY_AD_TOKEN_LIMIT = 5;      // NEW: Max 5 tokens from ads per day
+        const ADS_PER_PLINKO_TOKEN = 2;             // NEW: 2 Ads = 1 Token
+        const AD_SIMULATION_TIME_MS = 3000; 
+        
+        const DAILY_REWARD_BASE = 50; 
+        const DAILY_REWARD_INCREMENT = 50; 
+        const DAILY_REWARD_DAYS = 90;               // NEW: 90 days streak
+        // REMOVED: PRIZE_UNLOCK_DATE 
+        const REFERRAL_BONUS_COINS = 999; 
+
+        // NEW: WITHDRAWAL CONSTANTS
+        const COIN_TO_USDT_RATE = 0.0005; // 1 Coin = $0.0005 USDT
+        const MIN_EXCHANGE_COINS = 100; // NEW: Minimum coins to exchange to USDT
+        const MIN_WITHDRAW_USDT = 10.00; // MODIFIED: Minimum withdrawal amount in USDT (used to be MAX_WITHDRAW_USDT)
+        // MODIFIED: Updated Image Link
+        const USDT_IMAGE_URL = 'https://i.ibb.co.com/k2R105DF/AIRetouch-20251118-063831848.png'; 
+        // NEW: Referral Lock Constant
+        const MIN_REFERRALS_FOR_WITHDRAWAL = 10;
+        // END NEW WITHDRAWAL CONSTANTS
+
+        // REMOVED: Lottery Constants
+        
+        const QUIZ_DAILY_LIMIT = 10;                // NEW: 10 quizzes per day
+        
+        const PLINKO_PEG_SPACING_Y = 35;
+        const PLINKO_MAX_PEG_ROWS = 8; 
+        
+        
+        let plinkoPegPositions = []; 
+        let liveFeedInterval = null; 
+        
+
+        // const generalPopup = document.getElementById('general-popup'); // MOVED TO GLOBAL
+        // const popupBody = document.getElementById('popup-body'); // MOVED TO GLOBAL
+        const welcomePopup = document.getElementById('welcome-popup');
+        const rewardPopupOverlay = document.getElementById('reward-popup-overlay');
+        const rewardPopupMessage = document.getElementById('reward-popup-message');
+        const loadingProgress = document.getElementById('loading-progress');
+        const appLoader = document.getElementById('app-loader');
+        const liveFeedBanner = document.getElementById('live-feed-banner');
+        // REMOVED: buyTicketBtn
+        const plinkoAdWatchBtn = document.getElementById('watch-ad-for-token-btn'); 
+        // REMOVED: lotteryStatusDisplay
+        const fixedClaimBtnContainer = document.getElementById('fixed-claim-btn-container'); // NEW Fixed Button Container
+        
+        // NEW: TON Connect UI Button/Display Elements
+        const connectBtn = document.getElementById("connectBtn");
+        const walletAddressDiv = document.getElementById("walletAddress");
+        const addressText = document.getElementById("addressText");
+        
+        // NEW: Exchange/Withdrawal Elements
+        const exchangeView = document.getElementById("exchange-view"); // New Exchange View
+        const withdrawFinalView = document.getElementById("withdraw-final-view"); // New Withdrawal Final View
+        const exchangeInput = document.getElementById("exchange-input");
+        const exchangeBtn = document.getElementById("exchange-btn");
+        const withdrawInput = document.getElementById("withdraw-amount-input");
+        const withdrawBtn = document.getElementById("withdraw-btn");
+
+
+        // --- State Manager (REIMPLEMENTED with IN-MEMORY update logic for stability) ---
+        stateManager = {
+            db: null, 
+
+            saveState: () => {
+                // Placeholder - in a real app, this would push appState.user to Firebase
+                console.log("State Saved (Simulated) to in-memory appState.user", appState.user);
+            },
+            
+            // Placeholder for loading initial user data
+            loadState: async (userId) => {
+                // Simulating DB fetch failure/new user
+                // For a real user, this should pull the state from Firebase.
+                const userRef = firebase.database().ref(`users/${userId}`);
+                const snapshot = await userRef.once('value');
+                let userData = snapshot.val();
+                
+                if (!userData) {
+                    const newUserState = {
+                        id: userId, 
+                        firstName: tgUser.first_name || 'User', 
+                        lastName: tgUser.last_name || '', 
+                        username: tgUser.username || '', 
+                        photoUrl: tgUser.photo_url || '', 
+                        balance: 0.00, // MODIFIED: New users now start with 0 coins
+                        usdtBalance: 0.00, // NEW: USDT Balance
+                        referrals: 0, // Referrals made by THIS user
+                        referredBy: null, 
+                        referralCredited: false, 
+                        welcomed: false,
+                        dailyPlinkoTokens: 5, // MODIFIED: Start with 5 tokens
+                        lastPlinkoDate: null, 
+                        totalPlinkoEarnings: 0.00, 
+                        dailyRewardStreak: 0, 
+                        lastRewardCollectDate: null, 
+                        wonQuizzes: [], 
+                        lotteryTicketStatus: 'none', // REMOVED lottery status logic (kept field to prevent crash)
+                        adWatchProgressForNextToken: 0, 
+                        tokensEarnedFromAdsToday: 0,
+                        // NEW: Quiz Tracking
+                        dailyQuizzesPlayed: 0,
+                        lastQuizDate: null,
+                        // NEW: Wallet Tracking
+                        tonWalletAddress: null, // The connected TON wallet address
+                        exchangeCompleted: false, // KEPT for potential future use, but removed from render logic
+                    };
+                    // Set initial state in DB for persistence (if Firebase is set up properly)
+                    userRef.set(newUserState).catch(e => console.error("Error setting initial user data:", e));
+                    return newUserState;
+                }
+                return userData;
+            },
+            
+            initialize: async (user, config) => {
+                appState.user = user;
+                appState.config = config;
+                stateManager.db = firebase.database();
+
+                const loadedState = await stateManager.loadState(user.id);
+                
+                // NEW: Fetch config from DB
+                const configSnapshot = await stateManager.db.ref('config').once('value');
+                appState.config = { ...config, ...configSnapshot.val() };
+                
+                // Update user state with loaded data
+                appState.user = { ...user, ...loadedState };
+
+                // Ensure types are correct
+                appState.user.balance = parseFloat(appState.user.balance || 0);
+                appState.user.usdtBalance = parseFloat(appState.user.usdtBalance || 0); // NEW
+                appState.user.dailyPlinkoTokens = parseInt(appState.user.dailyPlinkoTokens || 0);
+                appState.user.totalPlinkoEarnings = parseFloat(appState.user.totalPlinkoEarnings || 0);
+                appState.user.dailyRewardStreak = parseInt(appState.user.dailyRewardStreak || 0);
+                appState.user.referrals = parseInt(appState.user.referrals || 0); 
+                appState.user.wonQuizzes = Array.isArray(appState.user.wonQuizzes) ? appState.user.wonQuizzes : []; 
+                
+                appState.user.adWatchProgressForNextToken = parseInt(appState.user.adWatchProgressForNextToken || 0);
+                appState.user.tokensEarnedFromAdsToday = parseInt(appState.user.tokensEarnedFromAdsToday || 0);
+                
+                // NEW: Quiz Tracking Type Casting
+                appState.user.dailyQuizzesPlayed = parseInt(appState.user.dailyQuizzesPlayed || 0); 
+                
+                // NEW: Exchange flag
+                appState.user.exchangeCompleted = !!appState.user.exchangeCompleted;
+                
+                stateManager.saveState(); // Save after merge
+            },
+            
+            // NEW: Fully implemented update functions (in-memory & simulated DB)
+            updateBalance: (amount) => {
+                appState.user.balance = (appState.user.balance || 0) + parseFloat(amount);
+                firebase.database().ref(`users/${appState.user.id}/balance`).set(appState.user.balance);
+                renderUI();
+            },
+            updateUSDTBalance: (amount) => { // NEW function for USDT
+                appState.user.usdtBalance = (appState.user.usdtBalance || 0) + parseFloat(amount);
+                firebase.database().ref(`users/${appState.user.id}/usdtBalance`).set(appState.user.usdtBalance);
+                renderUI();
+            },
+            updateTokens: (amount) => {
+                appState.user.dailyPlinkoTokens = (appState.user.dailyPlinkoTokens || 0) + parseInt(amount);
+                firebase.database().ref(`users/${appState.user.id}/dailyPlinkoTokens`).set(appState.user.dailyPlinkoTokens);
+                renderUI();
+            },
+            updatePlinkoEarnings: (amount) => {
+                appState.user.totalPlinkoEarnings = (appState.user.totalPlinkoEarnings || 0) + parseFloat(amount);
+                firebase.database().ref(`users/${appState.user.id}/totalPlinkoEarnings`).set(appState.user.totalPlinkoEarnings);
+                renderUI();
+            },
+            
+            // FIXED: Daily Reward Claim Logic
+            updateDailyStreak: (day, coins, tokens, today) => {
+                appState.user.dailyRewardStreak = day; 
+                appState.user.lastRewardCollectDate = today;
+                stateManager.updateBalance(coins); 
+                if (tokens > 0) stateManager.updateTokens(tokens);
+
+                // Update DB for streak and last collect date
+                const userRef = firebase.database().ref(`users/${appState.user.id}`);
+                userRef.update({
+                    dailyRewardStreak: appState.user.dailyRewardStreak,
+                    lastRewardCollectDate: appState.user.lastRewardCollectDate,
+                });
+            },
+            
+            // REMOVED: Lottery Status Update Logic (kept placeholder)
+            updateLotteryStatus: (status) => {
+                appState.user.lotteryTicketStatus = status;
+                firebase.database().ref(`users/${appState.user.id}/lotteryTicketStatus`).set(status);
+                renderUI();
+            },
+            
+            // NEW: Referral Count Update
+            incrementReferralCount: (referrerId) => {
+                // In a real app, this would increment the referrer's counter in DB
+                console.warn(`Simulating increment for referrer ID: ${referrerId}`);
+                if (String(referrerId) === String(appState.user.id)) {
+                    appState.user.referrals += 1;
+                    firebase.database().ref(`users/${appState.user.id}/referrals`).set(appState.user.referrals);
+                    renderUI();
+                }
+            },
+            
+            // NEW: Quiz History Update
+            logWonQuiz: (questionText) => {
+                if (!appState.user.wonQuizzes.includes(questionText)) {
+                    appState.user.wonQuizzes.push(questionText);
+                    firebase.database().ref(`users/${appState.user.id}/wonQuizzes`).set(appState.user.wonQuizzes);
+                }
+            },
+            
+            // NEW: TON Wallet Address Update (Crucial for Multi-ID Fix)
+            updateTonWalletAddress: (address) => {
+                 appState.user.tonWalletAddress = address;
+                 // Set the address against the current user's Telegram ID
+                 firebase.database().ref(`users/${appState.user.id}/tonWalletAddress`).set(address);
+                 renderUI(); // Render UI to show/hide Connect/Withdraw
+            },
+            
+            // NEW: Exchange Completed Update (Kept for log, but removed from render logic)
+            updateExchangeStatus: (status) => {
+                 appState.user.exchangeCompleted = status;
+                 firebase.database().ref(`users/${appState.user.id}/exchangeCompleted`).set(status);
+                 renderUI();
+            }
+        };
+        // --- End State Manager ---
+        
+        // --- TON Connect UI Logic ---
+        const setupTonConnectUI = () => {
+            if (typeof TON_CONNECT_UI === 'undefined') {
+                console.error("TON_CONNECT_UI not loaded.");
+                return;
+            }
+            
+            try {
+                
+                // **** FIX: Netlify URL দিয়ে ম্যানিফেস্ট URL পরিবর্তন করা হয়েছে! ****
+                const manifestUrl = "https://n3xupx-gif.github.io/CashQuizBD//tonconnect-manifest.json"; // <--- ফিক্সড লাইন!
+                
+                // Initialize TON Connect UI
+                tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+                    manifestUrl: manifestUrl,
+                });
+                
+                // Connect Wallet
+                connectBtn.addEventListener("click", async () => {
+                    try {
+                        await tonConnectUI.connectWallet();
+                    } catch (err) {
+                        console.log("Wallet Connection Failed:", err);
+                        // REMOVED: Specific error message as requested (DO NOT SHOW ALERT)
+                    }
+                });
+
+                // Wallet Status Handler
+                tonConnectUI.onStatusChange((wallet) => {
+                    if (wallet) {
+                        const address = wallet.account.address;
+                        // THIS IS THE CRITICAL LINE: It ties the connected address to the Telegram ID
+                        stateManager.updateTonWalletAddress(address);
+                        tg.showAlert("✅ TON Wallet Connected!");
+                        
+                        // NOTE: UI is rendered via stateManager.updateTonWalletAddress
+                    } else {
+                        // If the wallet disconnects externally, we clear our stored address
+                        if(appState.user.tonWalletAddress) {
+                             stateManager.updateTonWalletAddress(null);
+                             tg.showAlert("⚠️ TON Wallet Disconnected.");
+                        }
+                    }
+                });
+                
+            } catch (e) {
+                 console.error("Error setting up TON Connect UI:", e);
+                 tg.showAlert("❌ TON Wallet feature could not be initialized.");
+            }
+        };
+        // --- END TON Connect UI Logic ---
+
+        // NEW: Withdrawal Logic (Combined Exchange + Final Withdraw)
+        const updateExchangeEstimate = () => {
+             const input = parseFloat(exchangeInput.value);
+             const coinAmountEl = document.getElementById('exchange-coin-amount');
+             const usdtAmountEl = document.getElementById('exchange-usdt-amount');
+             
+             if (isNaN(input) || input <= 0) {
+                 coinAmountEl.textContent = (appState.user.balance || 0).toFixed(3);
+                 usdtAmountEl.textContent = ((appState.user.balance || 0) * COIN_TO_USDT_RATE).toFixed(2);
+                 exchangeBtn.disabled = true;
+                 return;
+             }
+             
+             const usdtAmount = (input * COIN_TO_USDT_RATE);
+             coinAmountEl.textContent = input.toFixed(3);
+             usdtAmountEl.textContent = usdtAmount.toFixed(2);
+             
+             if (input > appState.user.balance || input < MIN_EXCHANGE_COINS) {
+                 exchangeBtn.disabled = true;
+                 coinAmountEl.style.color = 'var(--danger)';
+             } else {
+                 exchangeBtn.disabled = false;
+                 coinAmountEl.style.color = 'var(--text-primary)';
+             }
+        };
+        
+        const handleCoinExchange = () => {
+             const coinAmount = parseFloat(exchangeInput.value);
+             const userBalance = appState.user.balance;
+             
+             if (!coinAmount || coinAmount < MIN_EXCHANGE_COINS) {
+                 tg.showAlert(`অনুগ্রহ করে কমপক্ষে ${MIN_EXCHANGE_COINS} Coins লিখুন।`);
+                 return;
+             }
+             if (coinAmount > userBalance) {
+                 tg.showAlert("আপনার অ্যাকাউন্টে পর্যাপ্ত Coins নেই।");
+                 return;
+             }
+             
+             const usdtAmount = coinAmount * COIN_TO_USDT_RATE;
+             
+             // 1. Deduct coin balance
+             stateManager.updateBalance(-coinAmount);
+             // 2. Add USDT balance
+             stateManager.updateUSDTBalance(usdtAmount);
+             // 3. Set exchange flag (Kept for log, removed from render logic)
+             stateManager.updateExchangeStatus(true);
+             
+             tg.showAlert(`✅ ${coinAmount.toFixed(2)} Coins এক্সচেঞ্জ করে ${usdtAmount.toFixed(2)} USDT যোগ হয়েছে!`);
+             exchangeInput.value = '';
+             updateExchangeEstimate();
+        };
+
+        const updateWithdrawEstimate = () => {
+             const input = parseFloat(withdrawInput.value);
+             const currentUsdtBalance = document.getElementById('current-usdt-balance');
+             
+             currentUsdtBalance.textContent = `${appState.user.usdtBalance.toFixed(2)} USDT Available`;
+
+             if (isNaN(input) || input <= 0) {
+                 withdrawBtn.disabled = true;
+                 return;
+             }
+
+             // Dynamic color change based on max limit
+             if (input > appState.user.usdtBalance) {
+                 withdrawBtn.disabled = true;
+             } else if (input < MIN_WITHDRAW_USDT) {
+                 withdrawBtn.disabled = true;
+             } else {
+                 withdrawBtn.disabled = false;
+             }
+             
+             // Visually indicate input error if outside bounds
+             if (input > appState.user.usdtBalance || input < MIN_WITHDRAW_USDT) {
+                 withdrawInput.style.borderColor = 'var(--danger)';
+             } else {
+                 withdrawInput.style.borderColor = 'var(--success)';
+             }
+        };
+        
+        const handleWithdrawal = () => {
+             const usdtAmount = parseFloat(withdrawInput.value);
+             const userUsdtBalance = appState.user.usdtBalance;
+             const userReferrals = appState.user.referrals || 0;
+             
+             if (userReferrals < MIN_REFERRALS_FOR_WITHDRAWAL) {
+                 tg.showAlert(`❌ উইথড্র করতে কমপক্ষে ${MIN_REFERRALS_FOR_WITHDRAWAL} টি রেফারেল লাগবে। আপনার আছে: ${userReferrals} টি।`);
+                 return;
+             }
+             
+             if (!usdtAmount || usdtAmount < MIN_WITHDRAW_USDT) {
+                 tg.showAlert(`অনুগ্রহ করে কমপক্ষে ${MIN_WITHDRAW_USDT} USDT লিখুন।`);
+                 return;
+             }
+             if (usdtAmount > userUsdtBalance) {
+                 tg.showAlert("আপনার অ্যাকাউন্টে পর্যাপ্ত USDT নেই।");
+                 return;
+             }
+             
+             // 1. Deduct USDT balance immediately
+             stateManager.updateUSDTBalance(-usdtAmount);
+
+             // 2. Log withdrawal request to a separate Firebase node for admin review
+             // MODIFIED: Adding user name to the log
+             firebase.database().ref('withdrawal_requests').push({
+                 userId: tgUser.id,
+                 userName: appState.user.firstName + ' ' + appState.user.lastName,
+                 walletAddress: appState.user.tonWalletAddress,
+                 usdtAmount: usdtAmount,
+                 timestamp: new Date().toISOString(),
+                 status: 'pending' 
+             });
+             
+             tg.showAlert(`✅ ${usdtAmount.toFixed(2)} USDT উত্তোলনের অনুরোধ সফলভাবে জমা দেওয়া হয়েছে।`);
+             withdrawInput.value = '';
+             updateWithdrawEstimate();
+             renderUI();
+        };
+
+        // END NEW Withdrawal Logic
+        
+        // NEW: Leaderboard Logic
+        const renderLeaderboard = async () => {
+             const listEl = document.getElementById('leaderboard-list');
+             listEl.innerHTML = '<p style="text-align:center; color: var(--text-secondary);">Loading leaderboard...</p>';
+             
+             try {
+                const usersRef = firebase.database().ref('users');
+                // Fetch all users and order them by referral count
+                const snapshot = await usersRef.orderByChild('referrals').limitToLast(10).once('value');
+                const usersObj = snapshot.val();
+                
+                if (!usersObj) {
+                     listEl.innerHTML = '<p style="text-align:center; color: var(--text-secondary);">No referral data found.</p>';
+                     return;
+                }
+                
+                // Convert to array and sort descending (since Firebase limitToLast is ascending in snapshot)
+                const topUsers = Object.values(usersObj).sort((a, b) => (b.referrals || 0) - (a.referrals || 0));
+
+                let listHtml = '';
+                topUsers.forEach((user, index) => {
+                    const firstName = user.firstName || 'User';
+                    const username = user.username || 'unknown';
+                    
+                    // Obfuscate Name: First 3 chars of first name + *** + last 2 chars of username
+                    const obfuscatedName = firstName.slice(0, 3) + '***' + username.slice(-2);
+                    
+                    const photoUrl = user.photoUrl || 'https://via.placeholder.com/45';
+                    const referrals = user.referrals || 0;
+                    
+                    listHtml += `
+                        <div class="leaderboard-item">
+                            <span class="leaderboard-rank">${index + 1}.</span>
+                            <div class="leaderboard-info">
+                                <img class="leaderboard-photo" src="${photoUrl}" alt="Photo">
+                                <span class="leaderboard-name">${obfuscatedName}</span>
+                            </div>
+                            <span class="leaderboard-count">${referrals}</span>
+                        </div>
+                    `;
+                });
+                
+                listEl.innerHTML = listHtml;
+                
+             } catch (error) {
+                 console.error("Error loading leaderboard:", error);
+                 listEl.innerHTML = '<p style="text-align:center; color: var(--danger);">Failed to load leaderboard data.</p>';
+             }
+        }
+        // END NEW Leaderboard Logic
+
+
+        const generateBinaryBackground = () => {
+            const bg = document.getElementById('binary-background');
+            const numColumns = Math.floor(window.innerWidth / 20); 
+            const charSet = '01';
+            
+            for (let i = 0; i < numColumns; i++) {
+                const column = document.createElement('div');
+                column.className = 'binary-column';
+                column.style.left = `${i * 20}px`;
+                
+                let text = '';
+                for (let j = 0; j < 50; j++) { 
+                    text += charSet.charAt(Math.floor(Math.random() * charSet.length)) + '\n';
+                }
+                column.textContent = text;
+                
+                const duration = Math.random() * 10 + 5; 
+                const delay = Math.random() * -duration; 
+                column.style.animationDuration = `${duration}s`;
+                column.style.animationDelay = `${delay}s`;
+
+                bg.appendChild(column);
+            }
+        };
+        
+        const startRandomMessageFeed = () => {
+            if (liveFeedInterval) clearTimeout(liveFeedInterval);
+            // MODIFIED: User requested text
+            document.getElementById('live-feed-message').textContent = "💥🔥Play, earn coins, and win rewards instantly!🔥💥";
+        };
+
+        // REMOVED: showGeneralPopup, closeGeneralPopup (MOVED TO GLOBAL SCOPE)
+        
+        const showWelcomePopup = (title, message) => {
+            // FIXED: Ensure welcome title/text uses the config loaded from Firebase
+            const welcomeTitle = title || appState.config.welcomeTitle;
+            const welcomeText = message || appState.config.welcomeText;
+            
+            document.getElementById('welcome-title').textContent = welcomeTitle;
+            document.getElementById('welcome-text').textContent = welcomeText;
+            welcomePopup.classList.add('active');
+            welcomePopup.querySelector('.popup-close-btn').onclick = () => { 
+                welcomePopup.classList.remove('active');
+                appState.user.welcomed = true;
+                firebase.database().ref(`users/${appState.user.id}/welcomed`).set(true);
+            };
+        };
+        
+        const showRewardPopup = (message) => {
+            rewardPopupMessage.textContent = message;
+            rewardPopupOverlay.classList.add('active');
+            for (let i = 0; i < 50; i++) { createConfetti(); }
+        };
+
+        // ** ACTUAL Ad Call Logic (Monetag Integration) **
+        const showAdAndCallback = (callback, context) => {
+            const adZoneId = appState.config.adNetworkZoneId;
+            // NOTE: The Ad Network SDK is loaded with this specific function name in the global window object.
+            const adFunction = window[`show_${adZoneId}`];
+            
+            if (typeof adFunction !== 'function') {
+                // MODIFIED: Bengali Alert
+                tg.showAlert("বিজ্ঞাপন লোড হতে পারেনি। অ্যাডমিন প্যানেলে কনফিগারেশন চেক করুন বা কয়েক সেকেন্ড অপেক্ষা করে আবার চেষ্টা করুন।");
+                callback(false);
+                return;
+            }
+
+            // 1. Loading/Waiting Popup দেখানো (Bengali Popup)
+            // MODIFIED: Using showQuizLoader for the 9-dot spinner effect
+            showQuizLoader("বিজ্ঞাপন লোড হচ্ছে...");
+
+            // 2. আসল অ্যাড কল করা
+            try {
+                
+                // IMPORTANT: In a real Monetag implementation, you might need to use a specific callback system,
+                // but for this standard SDK emulation, we rely on a timeout and confirmation.
+                adFunction(); 
+                
+                // Simulating a fixed time wait for the ad view
+                setTimeout(() => {
+                    closeGeneralPopup();
+                    callback(true); // Simulate successful ad view
+                }, AD_SIMULATION_TIME_MS);
+                
+            } catch (error) {
+                 closeGeneralPopup();
+                 // MODIFIED: Bengali Alert
+                 tg.showAlert(`অ্যাড কল করতে ব্যর্থ: ${error.message || 'অজানা ত্রুটি'}`);
+                 callback(false);
+            }
+        };
+        // ** END ACTUAL Ad Call Logic **
+
+        // *** FIXED: Referral Logic - Crediting the referredBy user (the referrer) ***
+        const handleReferralLogic = async () => {
+             const startParam = tg.initDataUnsafe.start_param;
+            
+            // Check if user was referred, is not self-referring, and has not been credited yet
+            if (startParam && String(startParam) !== String(appState.user.id) && !appState.user.referralCredited) {
+                
+                appState.user.referredBy = startParam; 
+                appState.user.referralCredited = true; 
+
+                const bonus = appState.config.referralBonus || REFERRAL_BONUS_COINS;
+
+                // 1. Credit the referrer (the user who owns the startParam ID)
+                const referrerRef = firebase.database().ref(`users/${startParam}`);
+                const referrerSnapshot = await referrerRef.once('value');
+                
+                if (referrerSnapshot.exists()) {
+                    const referrerData = referrerSnapshot.val();
+                    const currentReferrals = referrerData.referrals || 0;
+                    const currentBalance = referrerData.balance || 0;
+
+                    // A) Credit the referrer (friend) with the coin and increment count
+                    referrerRef.update({ 
+                        referrals: currentReferrals + 1,
+                        balance: parseFloat(currentBalance) + parseFloat(bonus) 
+                    });
+                    
+                    // B) Update the referee's status (this user)
+                    const userRef = firebase.database().ref(`users/${appState.user.id}`);
+                    userRef.update({ referredBy: startParam, referralCredited: true });
+
+                    // C) Inform the referee (current user)
+                    tg.showAlert(`🎉 আপনি ইউজার ${startParam} দ্বারা রেফার হয়েছেন। আপনার বন্ধু ${bonus} কয়েন বোনাস পেয়েছেন!`);
+                } else {
+                    // Referee log status even if referrer is not found/deleted
+                    const userRef = firebase.database().ref(`users/${appState.user.id}`);
+                    userRef.update({ referredBy: startParam, referralCredited: true });
+                    tg.showAlert(`🎉 আপনি রেফার হয়েছেন, কিন্তু আপনার বন্ধুকে (ইউজার: ${startParam}) খুঁজে পাওয়া যায়নি।`);
+                }
+            }
+        };
+        // *** END FIXED: Referral Logic ***
+
+
+        const initApp = async () => {
+            tg.ready(); tg.expand();
+            document.body.dataset.theme = tg.colorScheme === 'dark' ? 'dark' : 'light'; 
+            
+            const themeIcon = document.getElementById('theme-toggle').querySelector('i');
+            if(document.body.dataset.theme === 'dark') {
+                themeIcon.className = 'fas fa-sun';
+            } else {
+                themeIcon.className = 'fas fa-moon';
+            }
+
+            // NEW: Initialize Firebase
+            if (typeof firebase !== 'undefined' && typeof firebase.initializeApp === 'function') {
+                firebase.initializeApp(firebaseConfig);
+                console.log("Firebase Initialized!");
+            } else {
+                 // MODIFIED: Bengali Alert
+                tg.showAlert("Firebase SDK লোড হয়নি। অ্যাপ কাজ নাও করতে পারে।");
+                document.getElementById('app-loader').style.display = 'none'; // Ensure loader is hidden on critical failure
+                return;
+            }
+            // END NEW
+
+            tgUser = tg.initDataUnsafe.user || { 
+                id: 123456789, 
+                first_name: "Test", 
+                last_name: "User", 
+                username: "testuser",
+                photo_url: "https://via.placeholder.com/45" 
+            };
+            
+            if (!tgUser || !tgUser.id) { 
+                 // MODIFIED: Bengali Alert
+                tg.showAlert("ইউজার ডেটা লোড হয়নি। অনুগ্রহ করে টেলিগ্রাম বট থেকে আবার /start করে চেষ্টা করুন।"); 
+                document.getElementById('app-loader').style.display = 'none'; // Ensure loader is hidden on critical failure
+                return; 
+            }
+
+            try {
+                // MODIFIED: Removed all progress updates
+                generateBinaryBackground();
+                
+                // FIXED: Use a default config structure to handle missing DB values gracefully
+                const defaultConfig = {
+                    // ** MODIFIED WELCOME MESSAGE **
+                    welcomeTitle: "আসসালামু আলাইকুম। আপনাকে স্বাগতম!", 
+                    welcomeText: "আমাদের প্ল্যাটফর্মে প্রতিদিন game & Quiz খেলে ইনকাম করুন।",
+                    // ** END MODIFIED WELCOME MESSAGE **
+                    plinkoDailyTokens: 5, // MODIFIED: Default 5
+                    referralBonus: REFERRAL_BONUS_COINS,
+                    botUsername: 'cashquizbdbot', // Fixed bot name
+                    plinkoBuckets: [100, 80, 60, 40, 20, 40, 60, 80, 100], 
+                    adNetworkScriptUrl: 'https://libtl.com/sdk.js', 
+                    adNetworkZoneId: '10186059', 
+                    PLINKO_DAILY_AD_TOKEN_LIMIT: PLINKO_DAILY_AD_TOKEN_LIMIT, 
+                    ADS_PER_PLINKO_TOKEN: ADS_PER_PLINKO_TOKEN, 
+                };
+                
+                // Initialize state and load config from DB
+                await stateManager.initialize(tgUser, defaultConfig); 
+
+                await handleReferralLogic(); // Await referral logic to ensure state is finalized
+                
+                // Load Ad SDK using config from DB
+                loadAdSdk(appState.config.adNetworkScriptUrl, appState.config.adNetworkZoneId);
+
+                // NEW: Setup TON Connect UI
+                setupTonConnectUI();
+
+                renderUI(); 
+                setupNavigation(); 
+                setupEventListeners();
+                // REMOVED: startPrizeCountdown(); 
+                startRandomMessageFeed(); 
+                
+                // FIXED: Simplified the final timeout for stability
+                setTimeout(() => {
+                    appLoader.style.display = 'none';
+                    document.getElementById('app').style.display = 'block';
+
+                    if (appState.config.welcomeTitle && !appState.user.welcomed) {
+                        // Use config from appState (loaded from DB)
+                        showWelcomePopup(appState.config.welcomeTitle, appState.config.welcomeText);
+                    }
+                    
+                    // NEW: If Quiz page is loaded, start quiz immediately
+                    // NOTE: This initial load is handled by the navigation listener now, but kept as a safeguard
+                    if (document.getElementById('quizs-page').classList.contains('active')) {
+                        startQuiz();
+                    }
+                    
+                }, 100); // Reduced delay for faster loading feel
+
+            } catch (error) { 
+                console.error("Initialization failed in initApp:", error); 
+                // MODIFIED: Bengali Alert
+                tg.showAlert(`অ্যাপ ডেটা লোড হয়নি, অনুগ্রহ করে আবার চেষ্টা করুন। ত্রুটি: ${error.message || 'Unknown'}`); 
+                
+                // Ensure the app starts (or at least the loader is hidden) even on failure
+                appLoader.style.display = 'none';
+                document.getElementById('app').style.display = 'block'; 
+            }
+        };
+
+        // REMOVED: startPrizeCountdown function
+
+        const checkDailyTokenReset = () => {
+            const today = new Date().toISOString().slice(0, 10);
+            if (appState.user.lastPlinkoDate !== today) {
+                
+                appState.user.dailyPlinkoTokens = (appState.user.dailyPlinkoTokens || 0) + 5; // MODIFIED: Base 5 tokens
+                appState.user.lastPlinkoDate = today; 
+                
+                // NOTE: No reset needed for ad-earned tokens since there is no limit now.
+                appState.user.adWatchProgressForNextToken = 0;
+                appState.user.tokensEarnedFromAdsToday = 0; // MODIFIED: Reset this for tracking/limit
+                
+                // NEW: Reset Daily Quiz Counter
+                appState.user.dailyQuizzesPlayed = 0;
+                appState.user.lastQuizDate = today;
+                
+                firebase.database().ref(`users/${appState.user.id}`).update({
+                    dailyPlinkoTokens: appState.user.dailyPlinkoTokens,
+                    lastPlinkoDate: appState.user.lastPlinkoDate,
+                    adWatchProgressForNextToken: 0,
+                    tokensEarnedFromAdsToday: 0,
+                    dailyQuizzesPlayed: 0, // NEW
+                    lastQuizDate: today    // NEW
+                });
+            }
+        };
+
+        const renderUI = () => {
+            const user = appState.user;
+            const config = appState.config;
+            
+            checkDailyTokenReset(); 
+            
+            const userPhotoEl = document.getElementById('user-photo');
+            if (userPhotoEl) {
+                userPhotoEl.src = user.photoUrl || 'https://via.placeholder.com/45';
+            }
+
+            document.getElementById('user-name').textContent = `${user.firstName} ${user.lastName}`;
+            document.getElementById('user-balance').textContent = parseFloat(user.balance || 0).toFixed(2);
+            // MODIFIED: English Labels
+            document.getElementById('plinko-tokens-display').textContent = user.dailyPlinkoTokens || 0;
+            document.getElementById('plinko-today-earnings').textContent = parseFloat(user.totalPlinkoEarnings || 0).toFixed(2);
+
+            // --- FIXED: অ্যাড UI আপডেট (2 অ্যাড = 1 টোকেন, max 5/day) --- 
+            const adRuleDisplayEl = document.getElementById('ad-rule-display');
+            const tokenProgress = user.adWatchProgressForNextToken || 0;
+            const adsPerToken = config.ADS_PER_PLINKO_TOKEN || ADS_PER_PLINKO_TOKEN; 
+            const tokensEarned = user.tokensEarnedFromAdsToday || 0;
+            const limit = config.PLINKO_DAILY_AD_TOKEN_LIMIT || PLINKO_DAILY_AD_TOKEN_LIMIT;
+
+            if (adRuleDisplayEl) {
+                // MODIFIED: Bengali/English Rule Display
+                adRuleDisplayEl.innerHTML = `
+                    <strong>${adsPerToken} Ads = 1 Token.</strong> Earned Today: ${tokensEarned}/${limit}.
+                    <br>Progress: ${tokenProgress}/${adsPerToken} Ads.
+                `;
+            }
+            
+            plinkoAdWatchBtn.textContent = (tokensEarned >= limit) ? 'Limit Reached' : `Watch Ad (${adsPerToken - tokenProgress} to Token)`;
+            plinkoAdWatchBtn.disabled = tokensEarned >= limit;
+            // ----------------------------------
+
+            const botUsername = config.botUsername.startsWith('@') ? config.botUsername.substring(1) : config.botUsername;
+            document.getElementById('referral-link-input').value = `https://t.me/${botUsername}/app?startapp=${tgUser.id}`;
+            document.getElementById('referral-count-display').textContent = user.referrals || 0; // FIXED: Should display the count
+
+            renderPlinkoBoard(); 
+            
+            document.getElementById('drop-plinko-btn').disabled = user.dailyPlinkoTokens < 1;
+
+            // REMOVED: Lottery Status Logic
+            
+            // --- NEW: Wallet Page UI Update (Exchange/Withdrawal View Logic) ---
+            const walletStatusMsg = document.getElementById('wallet-status-msg');
+            const userReferrals = user.referrals || 0;
+            
+            if (user.tonWalletAddress) {
+                const address = user.tonWalletAddress;
+                const shortAddress = address.slice(0, 4) + '...' + address.slice(-4);
+                addressText.textContent = shortAddress;
+                
+                connectBtn.style.display = "none";
+                walletAddressDiv.style.display = "block";
+                walletStatusMsg.textContent = "✅ আপনার TON Wallet সফলভাবে সংযুক্ত হয়েছে।";
+
+                // MODIFIED: Always show both views when wallet is connected
+                exchangeView.style.display = "block";
+                withdrawFinalView.style.display = "block";
+                
+                // Update Exchange View
+                document.getElementById('exchange-coin-amount').textContent = user.balance.toFixed(3);
+                document.getElementById('exchange-usdt-amount').textContent = (user.balance * COIN_TO_USDT_RATE).toFixed(2);
+                updateExchangeEstimate(); // Also handles disabling button based on input/balance
+
+                // Update Final Withdraw View
+                document.getElementById('current-usdt-balance').textContent = `${user.usdtBalance.toFixed(2)} USDT Available`;
+                
+                const lockStatusEl = document.getElementById('referral-lock-status');
+                const withdrawFormContainer = document.getElementById('withdrawal-form-container');
+                
+                if (userReferrals >= MIN_REFERRALS_FOR_WITHDRAWAL) {
+                    // UNLOCKED
+                    lockStatusEl.innerHTML = `<p style="color:var(--success); font-weight:700;"><i class="fas fa-unlock"></i> উইথড্রল সক্রিয়! রেফারেল: ${userReferrals}</p>`;
+                    withdrawFormContainer.style.display = 'block';
+                    // Re-run withdraw estimate to set button state
+                    updateWithdrawEstimate(); 
+                    document.querySelector('.min-withdraw-info').textContent = `Minimum withdrawal amount USDT: ${MIN_WITHDRAW_USDT.toFixed(2)}`;
+                } else {
+                    // LOCKED
+                    const needed = MIN_REFERRALS_FOR_WITHDRAWAL - userReferrals;
+                    lockStatusEl.innerHTML = `<p style="color:var(--danger); font-weight:700;"><i class="fas fa-lock"></i> উইথড্র করতে আরও ${needed} টি রেফারেল লাগবে। (বর্তমান: ${userReferrals})</p>`;
+                    withdrawFormContainer.style.display = 'none';
+                }
+
+            } else {
+                // Show Disconnected State
+                connectBtn.style.display = "flex"; 
+                walletAddressDiv.style.display = "none";
+                exchangeView.style.display = "none";
+                withdrawFinalView.style.display = "none";
+                walletStatusMsg.textContent = "Connect your TON Wallet to enable future coin withdrawals.";
+            }
+            // --- END NEW: Wallet Page UI Update ---
+        };
+        
+        // ** FIXED: handleWatchAdForPlinko (2 Ads = 1 Token, Max 5/day) **
+        const handleWatchAdForPlinko = () => {
+             const user = appState.user;
+             
+             // Check Ad Token Limit
+             if ((user.tokensEarnedFromAdsToday || 0) >= PLINKO_DAILY_AD_TOKEN_LIMIT) {
+                 tg.showAlert(`❌ আজকের জন্য অ্যাড দেখে টোকেন অর্জনের সীমা (${PLINKO_DAILY_AD_TOKEN_LIMIT}) শেষ হয়েছে।`);
+                 return;
+             }
+
+             showAdAndCallback((isSuccess) => {
+                 if (isSuccess) {
+                    
+                     user.adWatchProgressForNextToken = (user.adWatchProgressForNextToken || 0) + 1;
+                     
+                     let grantedToken = 0;
+                     if (user.adWatchProgressForNextToken >= ADS_PER_PLINKO_TOKEN) {
+                          // Grant Token
+                          grantedToken = 1;
+                          stateManager.updateTokens(grantedToken);
+                          user.adWatchProgressForNextToken = 0; // Reset progress
+                          
+                          // Tracking for the daily limit
+                          user.tokensEarnedFromAdsToday = (user.tokensEarnedFromAdsToday || 0) + 1;
+                          
+                          tg.HapticFeedback.notificationOccurred('success');
+                          showRewardPopup(`অ্যাড দেখা সফল! একটি প্লাইঙ্কো টোকেন যোগ হয়েছে!`);
+                     } else {
+                         // MODIFIED: Bengali Popup Message
+                          tg.showAlert(`অ্যাড দেখা সফল! আরও ${ADS_PER_PLINKO_TOKEN - user.adWatchProgressForNextToken} টি অ্যাড দেখলে আপনি একটি টোকেন পাবেন।`);
+                     }
+                     
+                     // Update DB
+                     firebase.database().ref(`users/${appState.user.id}`).update({
+                         adWatchProgressForNextToken: user.adWatchProgressForNextToken,
+                         tokensEarnedFromAdsToday: user.tokensEarnedFromAdsToday
+                     });
+                     
+                 } else {
+                     tg.HapticFeedback.notificationOccurred('error');
+                     // MODIFIED: Bengali Alert
+                     tg.showAlert("অ্যাড লোড হতে ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।");
+                 }
+                 
+                 renderUI(); 
+             }, 'plinko'); 
+        };
+        // ** End handleWatchAdForPlinko **
+
+
+        const renderPlinkoBoard = () => {
+            const board = document.getElementById('plinko-board');
+            // FIX 1: Removed scanner line from Plinko board
+            board.innerHTML = '<div id="plinko-ball"></div>'; 
+            plinkoPegPositions = []; 
+
+            const buckets = appState.config.plinkoBuckets; 
+            const numBuckets = buckets.length;
+            
+            let currentY = 30;
+            const boardWidth = board.clientWidth || 350; 
+            const horizontalSpacing = boardWidth / (PLINKO_MAX_PEG_ROWS + 2); 
+            
+            for (let r = 0; r < PLINKO_MAX_PEG_ROWS; r++) {
+                const count = r + 3; 
+                const rowLength = (count - 1) * horizontalSpacing;
+                const startX = (boardWidth - rowLength) / 2;
+                let rowPegs = [];
+
+                for (let i = 0; i < count; i++) {
+                    const x = startX + i * horizontalSpacing;
+                    const y = currentY;
+
+                    const peg = document.createElement('div');
+                    peg.className = 'plinko-peg';
+                    peg.style.left = `${x - 4}px`; 
+                    peg.style.top = `${y}px`;
+                    board.appendChild(peg);
+                    
+                    rowPegs.push({ x: x, y: y }); 
+                }
+                plinkoPegPositions.push(rowPegs);
+                currentY += PLINKO_PEG_SPACING_Y; 
+            }
+            
+            const bucketWidth = 100 / numBuckets;
+            buckets.forEach((value, index) => {
+                const bucket = document.createElement('div');
+                bucket.className = 'plinko-bucket';
+                bucket.style.width = `${bucketWidth}%`;
+                bucket.style.left = `${index * bucketWidth}%`;
+                bucket.textContent = `${value}C`;
+                bucket.dataset.value = value;
+                board.appendChild(bucket);
+            });
+        };
+
+        const handleDropPlinko = () => { 
+            const dropBtn = document.getElementById('drop-plinko-btn');
+            
+            if (appState.user.dailyPlinkoTokens < 1) {
+                // MODIFIED: Bengali Alert
+                tg.showAlert("আপনার কাছে প্লাইঙ্কো টোকেন নেই। টোকেন পেতে অ্যাড দেখুন!");
+                return;
+            }
+            
+            dropBtn.disabled = true;
+            dropBtn.textContent = 'Dropping...'; // MODIFIED: English Button Text
+            
+            stateManager.updateTokens(-1); 
+            
+            const ball = document.getElementById('plinko-ball');
+            const board = document.getElementById('plinko-board');
+            const boardRect = board.getBoundingClientRect();
+            ball.style.display = 'block';
+            
+            const ballRadius = 7.5;
+            const pegRadius = 4;
+            const maxBoardY = boardRect.height - 50; 
+            const dropDuration = 20; 
+
+            let ballX = boardRect.width / 2;
+            let ballY = 0;
+            
+            ball.style.top = `${ballY}px`;
+            ball.style.left = `${ballX - ballRadius}px`; 
+
+            let velocityX = (Math.random() - 0.5) * 5; 
+            let velocityY = 0;
+            const gravity = 0.4; 
+            let lastPegHitY = -1; 
+
+            const findNearestPeg = (x, y) => {
+                let nearest = null;
+                let minDist = Infinity;
+                const collisionThreshold = ballRadius + pegRadius; 
+                
+                plinkoPegPositions.flat().forEach(peg => {
+                    const dx = peg.x - x;
+                    const dy = peg.y - y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < collisionThreshold && peg.y > lastPegHitY) {
+                        minDist = distance;
+                        nearest = peg;
+                    }
+                });
+                return nearest;
+            };
+
+            const dropInterval = setInterval(() => {
+                velocityY += gravity;
+                ballX += velocityX;
+                ballY += velocityY;
+
+                // Wall collision
+                if (ballX < ballRadius) {
+                    velocityX *= -0.7; 
+                    ballX = ballRadius;
+                } else if (ballX > boardRect.width - ballRadius) {
+                    velocityX *= -0.7; 
+                    ballX = boardRect.width - ballRadius;
+                }
+
+                // Peg collision
+                const nearestPeg = findNearestPeg(ballX, ballY);
+                if (nearestPeg) {
+                    velocityX = (Math.random() - 0.5) * 5; 
+                    velocityY *= -0.4; 
+                    ballY = nearestPeg.y + pegRadius + ballRadius; 
+                    lastPegHitY = nearestPeg.y;
+                }
+                
+                ball.style.top = `${ballY}px`;
+                ball.style.left = `${ballX - ballRadius}px`;
+
+                // Bucket hit
+                if (ballY > maxBoardY) { 
+                    clearInterval(dropInterval);
+                    ball.style.display = 'none';
+
+                    const buckets = document.querySelectorAll('.plinko-bucket');
+                    const bucketWidth = boardRect.width / buckets.length;
+                    const bucketIndex = Math.floor(ballX / bucketWidth);
+                    const finalBucket = buckets[Math.max(0, Math.min(bucketIndex, buckets.length - 1))]; 
+                    const wonCoins = parseInt(finalBucket.dataset.value);
+
+                    stateManager.updateBalance(wonCoins);
+                    stateManager.updatePlinkoEarnings(wonCoins);
+
+                    tg.HapticFeedback.notificationOccurred('success');
+                    // MODIFIED: Bengali Popup Message
+                    showRewardPopup(`প্লাইঙ্কো জয়! আপনি ${wonCoins} কয়েন জিতেছেন!`);
+                    
+                    if (appState.user.dailyPlinkoTokens > 0) { dropBtn.disabled = false; }
+                    dropBtn.textContent = 'Drop Token'; // MODIFIED: English Button Text
+                }
+            }, dropDuration);
+        };
+
+        // REMOVED: handleBuyTicket and handleTransactionIdSubmission functions
+
+        window.copyCashInNumber = (element) => {
+             navigator.clipboard.writeText(element.textContent).then(() => {
+                 // MODIFIED: Bengali Alert
+                tg.showAlert("নম্বরটি কপি করা হয়েছে!");
+            }).catch(err => {
+                console.error('Could not copy text: ', err);
+            });
+        };
+
+
+        // ** MODIFIED QUIZ LOGIC (FIREBASE READ & DAILY LIMIT) **
+        const startQuiz = async () => { 
+            const questionEl = document.querySelector('#quiz-game-container h4');
+            const optionsContainer = document.getElementById('quiz-options-container');
+            const nextBtn = document.getElementById('quiz-next-btn');
+            const backBtn = document.getElementById('quiz-back-btn');
+            
+            // Initial/Next Quiz setup
+            questionEl.textContent = "Loading Question..."; 
+            optionsContainer.innerHTML = '';
+            nextBtn.style.display = 'none';
+            backBtn.style.display = 'block'; 
+
+            renderUI(); // ** NEW FIX: Ensure daily reset is checked and UI is fresh **
+            
+            // NEW: Daily Quiz Limit Check
+            if ((appState.user.dailyQuizzesPlayed || 0) >= QUIZ_DAILY_LIMIT) {
+                 document.getElementById('quiz-game-container').style.display = 'block';
+                 questionEl.textContent = `❌ দুঃখিত! আপনি আজকের জন্য নির্ধারিত ${QUIZ_DAILY_LIMIT} টি কুইজ সম্পন্ন করেছেন। আগামীকাল আবার চেষ্টা করুন।`;
+                 document.getElementById('quiz-options-container').innerHTML = '';
+                 document.getElementById('quiz-next-btn').style.display = 'none';
+                 return;
+            }
+
+            // MODIFIED: Show 9-dot loader popup
+            showQuizLoader("কুইজের প্রশ্ন লোড হচ্ছে...");
+            
+            try {
+                // 1. Get the list of previously completed questions
+                const previousQuizzes = appState.user.wonQuizzes || [];
+                
+                // 2. Fetch quiz from Firebase (Admin Managed)
+                currentQuiz = await fetchQuizFromFirebase(previousQuizzes); 
+                
+                closeGeneralPopup();
+                
+                if (!currentQuiz) {
+                    // Handle case where all quizzes are completed
+                    document.getElementById('quiz-game-container').style.display = 'block';
+                    questionEl.textContent = "🎉 অভিনন্দন! আপনি সমস্ত কুইজ সম্পন্ন করেছেন। নতুন কুইজের জন্য অপেক্ষা করুন।";
+                    document.getElementById('quiz-options-container').innerHTML = '';
+                    document.getElementById('quiz-next-btn').style.display = 'none';
+                    document.getElementById('quiz-back-btn').style.display = 'block';
+                    return;
+                }
+                
+                document.getElementById('quiz-game-container').style.display = 'block';
+                renderQuizQuestion(currentQuiz);
+                
+            } catch (e) {
+                closeGeneralPopup();
+                // MODIFIED: Bengali Alert
+                tg.showAlert(`কুইজ লোড করতে ব্যর্থ হয়েছে: ${e.message}`);
+                // Go back to home page on failure
+                switchPage('home-page');
+            }
+        };
+        
+        // ** MODIFIED QUIZ LOGIC (Kept same as it relies on the JSON structure) **
+        const renderQuizQuestion = (quiz) => {
+            const questionEl = document.querySelector('#quiz-game-container h4');
+            const optionsContainer = document.getElementById('quiz-options-container');
+            const nextBtn = document.getElementById('quiz-next-btn');
+            const backBtn = document.getElementById('quiz-back-btn');
+            
+            // NOTE: Using quiz.question (as per Admin JSON requirement)
+            questionEl.textContent = quiz.question; // Bengali Question
+            optionsContainer.innerHTML = '';
+            nextBtn.style.display = 'none';
+            backBtn.style.display = 'block'; 
+
+            const options = quiz.options || [];
+            // Use quiz.answer as the correct answer (should match one of the options)
+            const correctAnswer = quiz.answer;
+
+            const shuffledOptions = [...options].sort(() => Math.random() - 0.5);
+
+            shuffledOptions.forEach((optionText) => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-option-btn';
+                btn.textContent = optionText; // Bengali Options
+                btn.dataset.option = optionText;
+                btn.onclick = (e) => handleQuizAnswer(e.currentTarget, correctAnswer); 
+                optionsContainer.appendChild(btn);
+            });
+        };
+
+        const handleQuizAnswer = (selectedBtn, correctAnswer) => {
+            document.querySelectorAll('.quiz-option-btn').forEach(btn => {
+                btn.disabled = true;
+                if (btn.dataset.option === correctAnswer) {
+                    btn.classList.add('correct');
+                } else if (btn === selectedBtn) {
+                    btn.classList.add('wrong');
+                }
+            });
+            
+            const isCorrect = selectedBtn.dataset.option === correctAnswer;
+            if (isCorrect) {
+                // Log the question as "won/completed"
+                stateManager.logWonQuiz(currentQuiz.question); 
+                
+                // Simulate Reward
+                const rewardCoins = 50; 
+                stateManager.updateBalance(rewardCoins); 
+                // MODIFIED: Bengali Alert
+                tg.showAlert(`✅ সঠিক উত্তর! আপনি ${rewardCoins} কয়েন জিতেছেন!`);
+            } else {
+                // MODIFIED: Bengali Alert
+                tg.showAlert(`❌ ভুল উত্তর! সঠিক উত্তর ছিল: ${correctAnswer}`);
+            }
+
+            // NEW: Increment daily quiz counter regardless of correct/wrong answer
+            appState.user.dailyQuizzesPlayed = (appState.user.dailyQuizzesPlayed || 0) + 1;
+            firebase.database().ref(`users/${appState.user.id}/dailyQuizzesPlayed`).set(appState.user.dailyQuizzesPlayed);
+
+
+            // FIXED: Attach ad logic to the Next button
+            const nextBtn = document.getElementById('quiz-next-btn');
+            
+            // If the limit is reached, hide next and show only back
+            if ((appState.user.dailyQuizzesPlayed || 0) >= QUIZ_DAILY_LIMIT) {
+                 nextBtn.style.display = 'none';
+                 tg.showAlert(`আজকের কুইজের সীমা (${QUIZ_DAILY_LIMIT}) শেষ হয়েছে।`);
+                 return;
+            }
+
+            // MODIFIED: Explicitly show ad text on button
+            nextBtn.textContent = 'Next Quiz (Watch Ad)'; // English Button Text
+            nextBtn.style.display = 'block';
+            
+            // NEW: Guiding alert to fix user confusion
+            tg.showAlert("উত্তর যাচাই করা হয়েছে। পরবর্তী কুইজ লোড করার জন্য 'Next Quiz (Watch Ad)' বাটনে ক্লিক করুন।");
+            
+            nextBtn.onclick = () => {
+                nextBtn.disabled = true;
+                showAdAndCallback((isAdSuccess) => {
+                    nextBtn.disabled = false;
+                    if (isAdSuccess) {
+                        // Start the next unlimited quiz
+                        startQuiz(); 
+                    } else {
+                         // MODIFIED: Bengali Alert
+                         tg.showAlert("অ্যাড ব্যর্থ হয়েছে। পুনরায় চেষ্টা করুন।");
+                    }
+                }, 'quiz_next');
+            };
+        };
+
+        // FIXED: Back button logic to show ad and go home
+        const handleQuizBack = () => {
+            const backBtn = document.getElementById('quiz-back-btn');
+            backBtn.disabled = true;
+            showAdAndCallback((isAdSuccess) => {
+                backBtn.disabled = false;
+                if (isAdSuccess) {
+                    switchPage('home-page'); // Go back to the home page
+                } else {
+                    // MODIFIED: Bengali Alert
+                    tg.showAlert("অ্যাড ব্যর্থ হয়েছে। পুনরায় চেষ্টা করুন।");
+                }
+            }, 'quiz_back');
+        }
+        // ** END MODIFIED QUIZ LOGIC **
+
+        const generateDailyRewardsData = () => {
+            const rewards = [];
+            // NEW: Loop up to 90 days
+            for (let i = 1; i <= DAILY_REWARD_DAYS; i++) { 
+                let coins = DAILY_REWARD_BASE + (i - 1) * DAILY_REWARD_INCREMENT;
+                let bonus = 0;
+                let bonusIcon = '';
+                
+                // Update bonus days for a 90-day cycle (e.g., every 15 days)
+                if (i === 15) { bonus = 1; bonusIcon = '🎁'; }
+                else if (i === 30) { bonus = 3; bonusIcon = '✨'; }
+                else if (i === 45) { bonus = 5; bonusIcon = '⭐'; }
+                else if (i === 60) { bonus = 7; bonusIcon = '🔥'; }
+                else if (i === 90) { bonus = 10; bonusIcon = '👑'; }
+
+                rewards.push({ day: i, coins: coins, bonus: bonus, bonusIcon: bonusIcon, id: `day_${i}` });
+            }
+            return rewards;
+        };
+        
+        const dailyRewards = generateDailyRewardsData();
+
+        const renderDailyRewards = () => {
+             const grid = document.getElementById('daily-reward-grid');
+            const collectBtn = document.getElementById('collect-daily-reward-btn');
+            const currentStreak = appState.user.dailyRewardStreak || 0;
+            const today = new Date().toISOString().slice(0, 10);
+            
+            const isTodayCollected = appState.user.lastRewardCollectDate === today;
+            let nextCollectDay = currentStreak + 1; 
+            
+            let collectableIndex = -1;
+            if (!isTodayCollected && nextCollectDay <= dailyRewards.length) {
+                collectableIndex = nextCollectDay - 1; 
+            } else if (isTodayCollected) {
+                 nextCollectDay = currentStreak; 
+            }
+
+            grid.innerHTML = dailyRewards.map((reward, index) => {
+                const isCollected = index < currentStreak; 
+                const isNextCollect = index === collectableIndex; 
+                
+                let cardClass = '';
+                if (isCollected) cardClass = 'collected';
+                if (isNextCollect) cardClass = 'next-collect';
+
+                // MODIFIED: English Bonus Text
+                let bonusHtml = reward.bonus > 0 ? 
+                    `<p style="font-size: 0.8rem; font-weight: 500; color: ${isCollected ? 'var(--reward-text-collected)' : 'var(--primary-color)'}; margin-top: 5px;">${reward.bonusIcon} Bonus: ${reward.bonus}T</p>` : '';
+                
+                let iconHtml;
+                if (isCollected) {
+                    iconHtml = `<i class="fas fa-check-circle reward-icon" style="color:var(--reward-text-collected);"></i>`; 
+                } else {
+                    iconHtml = `<img class="reward-icon" src="https://cdn3d.iconscout.com/3d/premium/thumb/bangladeshi-taka-gold-coin-3d-icon-png-download-7281011.png" alt="Coin Icon">`;
+                }
+
+                // MODIFIED: English Day/Coin Text
+                return `
+                    <div class="reward-card ${cardClass}" data-day="${reward.day}">
+                        <h4>Day ${reward.day}</h4>
+                        ${iconHtml}
+                        <p>${reward.coins} Coins</p>
+                        ${bonusHtml}
+                    </div>
+                `;
+            }).join('');
+            
+            if (collectableIndex !== -1) {
+                collectBtn.disabled = false;
+                collectBtn.textContent = `Claim Day ${nextCollectDay}`; // MODIFIED: English Button Text
+                collectBtn.onclick = () => handleCollectDailyReward(dailyRewards[collectableIndex]);
+            } else if (isTodayCollected) {
+                collectBtn.disabled = true;
+                collectBtn.textContent = 'Today\'s Reward Claimed'; // MODIFIED: English Button Text
+            } else {
+                 collectBtn.disabled = true;
+                 collectBtn.textContent = 'All Rewards Claimed!'; // MODIFIED: English Button Text
+            }
+        };
+
+        // FIXED: Daily Reward Collection Logic
+        const handleCollectDailyReward = (rewardData) => {
+             const today = new Date().toISOString().slice(0, 10);
+            const collectBtn = document.getElementById('collect-daily-reward-btn');
+            
+            if (appState.user.lastRewardCollectDate === today) {
+                // MODIFIED: Bengali Alert
+                tg.showAlert("আপনি আজকের পুরষ্কার ইতোমধ্যে দাবি করেছেন।");
+                return;
+            }
+            if ((appState.user.dailyRewardStreak || 0) + 1 !== rewardData.day) {
+                 // MODIFIED: Bengali Alert
+                 tg.showAlert(`আপনাকে প্রথমে Day ${(appState.user.dailyRewardStreak || 0) + 1}-এর পুরষ্কার দাবি করতে হবে।`);
+                 return;
+            }
+
+            collectBtn.disabled = true;
+            collectBtn.textContent = 'Processing...'; // MODIFIED: English Button Text
+
+            try {
+                // FIXED: Now calls the properly implemented stateManager function
+                stateManager.updateDailyStreak(rewardData.day, rewardData.coins, rewardData.bonus, today);
+
+                tg.HapticFeedback.notificationOccurred('success');
+                // MODIFIED: Bengali Popup Message
+                showRewardPopup(`দৈনিক পুরষ্কার! আপনি ${rewardData.coins} কয়েন অর্জন করেছেন${rewardData.bonus > 0 ? ` এবং ${rewardData.bonus} প্লাইঙ্কো টোকেন` : ''}!`);
+                
+                renderUI(); 
+            } catch (error) {
+                console.error("Failed to collect daily reward CRITICALLY:", error);
+                // MODIFIED: Bengali Alert
+                tg.showAlert(`পুরষ্কার দাবি করতে ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন। ত্রুটি: ${error.message}`);
+            } finally {
+                 renderDailyRewards(); 
+            }
+        };
+
+
+        const setupNavigation = () => {
+            const navButtons = document.querySelectorAll('.nav-btn'); 
+            navButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const pageId = button.dataset.page;
+                    switchPage(pageId); 
+                });
+            });
+        };
+
+        const setupEventListeners = () => {
+            // UPDATED: Use the global generalPopup element
+            generalPopup.addEventListener('click', (e) => { 
+                if (e.target.classList.contains('popup-close-btn') || e.target === generalPopup) {
+                    closeGeneralPopup();
+                }
+            });
+            document.getElementById('drop-plinko-btn').addEventListener('click', handleDropPlinko);
+            document.getElementById('watch-ad-for-token-btn').addEventListener('click', handleWatchAdForPlinko); 
+            document.getElementById('copy-ref-link-btn').addEventListener('click', copyReferralLink);
+            document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+            // REMOVED: document.getElementById('buy-ticket-btn').addEventListener('click', handleBuyTicket); 
+            // NEW: Attach back button ad logic
+            document.getElementById('quiz-back-btn').addEventListener('click', handleQuizBack); 
+            
+            // NEW: Wallet/Withdrawal Listeners
+            exchangeInput.addEventListener('input', updateExchangeEstimate);
+            exchangeBtn.addEventListener('click', handleCoinExchange);
+            withdrawInput.addEventListener('input', updateWithdrawEstimate);
+            withdrawBtn.addEventListener('click', handleWithdrawal);
+            
+            // NEW: Initial quiz load when user clicks the Quiz button
+             document.querySelector('.nav-btn[data-page="quizs-page"]').addEventListener('click', () => {
+                // When navigating to the quiz page, automatically start a quiz
+                startQuiz();
+            });
+        };
+
+        const copyReferralLink = async () => {
+             const refLinkInput = document.getElementById('referral-link-input');
+            refLinkInput.select();
+            refLinkInput.setSelectionRange(0, 99999); 
+            try {
+                await navigator.clipboard.writeText(refLinkInput.value); 
+                tg.HapticFeedback.notificationOccurred('success');
+                 // MODIFIED: Bengali Alert
+                tg.showAlert("রেফারেল লিঙ্ক কপি করা হয়েছে!");
+            } catch (err) {
+                console.error("Failed to copy using clipboard API, falling back:", err);
+                try {
+                    document.execCommand('copy');
+                    tg.HapticFeedback.notificationOccurred('success');
+                     // MODIFIED: Bengali Alert
+                    tg.showAlert("রেফারেল লিঙ্ক কপি করা হয়েছে!");
+                } catch (fallbackErr) {
+                    console.error("Fallback copy failed:", fallbackErr);
+                    // MODIFIED: Bengali Alert
+                    tg.showAlert("লিঙ্ক কপি করতে ব্যর্থ হয়েছে। অনুগ্রহ করে নিজে কপি করুন।");
+                }
+            }
+        };
+
+        const switchPage = (pageId) => {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            const targetNavBtn = document.querySelector(`.nav-btn[data-page="${pageId}"]`);
+            if (targetNavBtn) {
+                targetNavBtn.classList.add('active');
+            }
+            
+            // FIX 4: Manage visibility of the fixed claim button
+            if (pageId === 'daily-reward-page') { 
+                renderDailyRewards(); 
+                fixedClaimBtnContainer.style.display = 'block'; 
+            } else {
+                fixedClaimBtnContainer.style.display = 'none'; 
+            }
+            
+            // MODIFIED: Leaderboard render on referral page
+            if (pageId === 'referral-page') { 
+                renderUI(); 
+                renderLeaderboard(); // NEW: Load leaderboard data
+            } 
+            
+            // MODIFIED: Wallet Page needs an explicit render for connection status
+            if (pageId === 'wallet-page') { renderUI(); }
+            
+            // MODIFIED: Quizs Page now directly loads a quiz (Handled by nav button listener)
+        };
+
+        const toggleTheme = () => {
+            const currentTheme = document.body.dataset.theme;
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.body.dataset.theme = newTheme;
+            tg.isDark = newTheme === 'dark'; 
+            document.getElementById('theme-toggle').innerHTML = newTheme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        };
+
+        const createConfetti = () => {
+            const confetti = document.createElement('div');
+            confetti.classList.add('confetti');
+            confetti.style.left = `${Math.random() * window.innerWidth}px`;
+            const colors = [getComputedStyle(document.body).getPropertyValue('--primary-color'), getComputedStyle(document.body).getPropertyValue('--secondary-color'), '#fff'];
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];        
+            confetti.style.setProperty('--x', `${Math.random() * window.innerWidth - window.innerWidth / 2}px`);
+            confetti.style.setProperty('--y', `${Math.random() * -window.innerHeight}px`);
+            confetti.style.setProperty('--x-end', `${Math.random() * window.innerWidth - window.innerWidth / 2}px`);
+            confetti.style.setProperty('--y-end', `${window.innerHeight * 1.5}px`);
+            confetti.style.setProperty('--rot-end', `${Math.random() * 1000}deg`);
+            document.body.appendChild(confetti);
+
+            confetti.addEventListener('animationend', () => {
+                confetti.remove();
+            });
+        };
+
+        initApp();
+    });
+    </script>
+</body>
+</html>
